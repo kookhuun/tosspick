@@ -1,19 +1,10 @@
-// ================================================================
-// 뉴스 갱신 함수 — 나중에 cron이 호출할 함수
-// ================================================================
-//
-// [지금] 구조만 준비. 실제 외부 API 호출 로직은 TODO.
-//
-// [나중에 cron 붙이는 방법]
-// 1. 이 함수에 실제 NewsAPI 호출 로직 구현
-// 2. app/api/cron/collect-news/route.ts 에서 이 함수 호출
-// 3. vercel.json 에 cron 설정 추가 (아래 주석 참고)
-// 4. POST /api/revalidate?tag=news 로 캐시 무효화
-//
-// ================================================================
-
+// 뉴스 갱신 — RSS 수집 → Claude 요약 → DB 저장 → 캐시 무효화
 import { revalidateTag } from 'next/cache'
 import { createPublicClient } from '@/lib/supabase/public'
+import { collectNewsFromRSS } from '@/lib/services/rss-collector'
+import { summarizeNews } from '@/lib/services/news-summarizer'
+
+const STALE_MINUTES = 30 // 마지막 수집 후 이 시간이 지나야 재수집
 
 export interface NewsInput {
   title: string
@@ -25,43 +16,76 @@ export interface NewsInput {
 }
 
 /**
- * 뉴스 데이터를 DB에 저장하고 캐시를 무효화한다.
- * 외부에서 뉴스 데이터를 수집한 후 이 함수를 호출하면 된다.
+ * DB에 뉴스를 저장하고 캐시를 무효화합니다.
  */
 export async function saveNewsItems(items: NewsInput[]): Promise<{ saved: number }> {
   const supabase = createPublicClient()
-
   const { count, error } = await supabase
     .from('news_items')
     .upsert(
       items.map((item) => ({ ...item, collected_at: new Date().toISOString() })),
       { onConflict: 'source_url', ignoreDuplicates: true, count: 'exact' }
     )
-
   if (error) throw new Error(error.message)
-
-  // 저장 후 캐시 무효화 → 다음 사용자 접속 시 fresh data 제공
   revalidateTag('news', 'max')
-
   return { saved: count ?? 0 }
 }
 
 /**
- * TODO: 외부 뉴스 API에서 뉴스 수집 → AI 요약 → saveNewsItems 호출
- *
- * 구현 시 필요한 것:
- * - NEWS_API_KEY 환경변수
- * - ANTHROPIC_API_KEY 환경변수
- * - lib/services/news-collector.ts (기존 파일 활용)
- * - lib/services/news-summarizer.ts (기존 파일 활용)
+ * 마지막 수집 시각을 확인하여 아직 신선하면 false 반환합니다.
  */
-export async function collectAndSaveNews(): Promise<{ collected: number }> {
-  // TODO: 구현 예정
-  // const articles = await collectNews(20)
-  // const summarized = await Promise.all(articles.map(summarizeNews))
-  // const { saved } = await saveNewsItems(summarized)
-  // return { collected: saved }
+async function isStale(): Promise<boolean> {
+  const supabase = createPublicClient()
+  const { data } = await supabase
+    .from('news_items')
+    .select('collected_at')
+    .order('collected_at', { ascending: false })
+    .limit(1)
+    .single()
 
-  console.warn('[refresh/news] collectAndSaveNews: 아직 구현되지 않았습니다.')
-  return { collected: 0 }
+  if (!data?.collected_at) return true // 데이터 없음 → 갱신 필요
+
+  const minutesAgo = (Date.now() - new Date(data.collected_at).getTime()) / 60000
+  return minutesAgo >= STALE_MINUTES
+}
+
+/**
+ * RSS 피드에서 뉴스 수집 → Claude 요약 → DB 저장
+ * - 30분 이내에 이미 수집된 경우 건너뜀 (Claude API 비용 절약)
+ * - 1회 실행 비용: 약 10~15원 (Claude Haiku, 20건 기준)
+ */
+export async function collectAndSaveNews(): Promise<{ collected: number; skipped: boolean }> {
+  // 신선도 체크 — 불필요한 Claude API 호출 방지
+  if (!(await isStale())) {
+    return { collected: 0, skipped: true }
+  }
+
+  const rawArticles = await collectNewsFromRSS(7) // 피드당 7개, 총 ~21개
+  if (rawArticles.length === 0) return { collected: 0, skipped: false }
+
+  let collected = 0
+  const toSave: NewsInput[] = []
+
+  for (const article of rawArticles) {
+    try {
+      const summary = await summarizeNews(article.title, article.description)
+      toSave.push({
+        title: article.title,
+        summary_one_line: summary.summary_one_line,
+        impact_direction: summary.impact_direction,
+        related_tickers: summary.related_tickers,
+        source_url: article.url,
+        published_at: article.publishedAt,
+      })
+    } catch {
+      // 요약 실패 시 건너뜀
+    }
+  }
+
+  if (toSave.length > 0) {
+    const { saved } = await saveNewsItems(toSave)
+    collected = saved
+  }
+
+  return { collected, skipped: false }
 }
