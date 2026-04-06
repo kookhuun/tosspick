@@ -13,37 +13,38 @@ export interface NewsItem {
 
 export default function NewsCard({ item }: { item: NewsItem }) {
   return (
-    <article className="rounded-xl border border-gray-100 bg-white p-4 shadow-sm hover:shadow-md transition-shadow">
-      <div className="flex items-start justify-between gap-2 mb-2">
-        <h3 className="text-sm font-semibold text-gray-900 leading-snug line-clamp-2 flex-1">
-          {item.title}
-        </h3>
-        <ImpactBadge direction={item.impact_direction} />
-      </div>
+    <a
+      href={item.source_url}
+      target="_blank"
+      rel="noopener noreferrer"
+      className="flex-shrink-0 w-64 rounded-2xl border border-gray-100 bg-white p-4 shadow-sm hover:shadow-md transition-shadow flex flex-col gap-2"
+    >
+      {/* 임팩트 배지 */}
+      <ImpactBadge direction={item.impact_direction} />
 
-      <p className="text-sm text-gray-700 font-medium mb-3">{item.summary_one_line}</p>
+      {/* 헤드라인 */}
+      <h3 className="text-base font-bold text-gray-900 leading-snug line-clamp-3">
+        {item.title}
+      </h3>
 
-      <div className="flex items-center justify-between">
-        <div className="flex flex-wrap gap-1">
+      {/* 세부 요약 */}
+      <p className="text-xs font-light text-gray-500 leading-relaxed line-clamp-3 flex-1">
+        {item.summary_one_line}
+      </p>
+
+      {/* 관련 종목 태그 */}
+      {item.related_tickers.length > 0 && (
+        <div className="flex flex-wrap gap-1 mt-auto pt-1">
           {item.related_tickers.map((symbol) => (
-            <a
+            <span
               key={symbol}
-              href={`/stock/${symbol}`}
-              className="inline-flex items-center rounded-full bg-blue-50 px-2.5 py-1 text-xs font-medium text-blue-700 hover:bg-blue-100 transition-colors"
+              className="inline-flex items-center rounded-full bg-blue-50 px-2 py-0.5 text-[10px] font-medium text-blue-700"
             >
               {symbol}
-            </a>
+            </span>
           ))}
         </div>
-        <a
-          href={item.source_url}
-          target="_blank"
-          rel="noopener noreferrer"
-          className="text-xs text-gray-400 hover:text-gray-600 transition-colors"
-        >
-          원문 보기
-        </a>
-      </div>
-    </article>
+      )}
+    </a>
   )
 }
