@@ -1,12 +1,10 @@
-// @TASK P3-S4-T1, P3-S4-T2 - S4 종목 상세 화면
+// @TASK P3-S4-T1, P3-S4-T2, P4-회사분석 - 종목 상세 화면 (3탭 구조)
 // 종목 데이터: unstable_cache (5분) → lib/data/tickers.ts
 import { notFound } from 'next/navigation'
 import Link from 'next/link'
 import StockHeader from '@/components/stock/StockHeader'
 import PriceChart from '@/components/stock/PriceChart'
-import KeyIndicators from '@/components/stock/KeyIndicators'
-import AICausalAnalysis from '@/components/stock/AICausalAnalysis'
-import RelatedNews from '@/components/stock/RelatedNews'
+import StockTabs from '@/components/stock/StockTabs'
 import { getTickerDetail, getTickerNews } from '@/lib/data/tickers'
 import type { TickerData } from '@/components/stock/StockHeader'
 import type { TickerDetailData } from '@/components/stock/KeyIndicators'
@@ -27,33 +25,44 @@ export default async function StockPage({ params }: PageProps) {
 
   const { ticker, detail } = stockData
 
+  const tabDetail: TickerDetailData & {
+    per?: number | null
+    pbr?: number | null
+    eps?: number | null
+  } = {
+    per: detail?.per ?? null,
+    pbr: detail?.pbr ?? null,
+    eps: detail?.eps ?? null,
+    dividend_rate: detail?.dividend_rate ?? null,
+    market_cap: ticker.market_cap,
+    volume: ticker.volume,
+  }
+
   return (
-    <main className="flex flex-col gap-3 pb-24 bg-gray-50 min-h-screen">
+    <main className="flex flex-col pb-24 bg-gray-50 min-h-screen">
+      {/* StockHeader: 탭 밖에 항상 표시 */}
       <StockHeader
         ticker={ticker as TickerData}
         isLoggedIn={false} // TODO P4: 세션에서 주입
       />
-      <div className="flex flex-col gap-3 px-3">
+
+      {/* 차트: 탭 밖에 항상 표시 */}
+      <div className="px-3 pt-3">
         <PriceChart chartData={(detail?.chart_data as Record<string, unknown>) ?? {}} />
-        <KeyIndicators
-          detail={{
-            per: detail?.per ?? null,
-            pbr: detail?.pbr ?? null,
-            eps: detail?.eps ?? null,
-            dividend_rate: detail?.dividend_rate ?? null,
-            market_cap: ticker.market_cap,
-            volume: ticker.volume,
-          } as TickerDetailData}
-        />
-        <AICausalAnalysis
+      </div>
+
+      {/* 3탭 영역 */}
+      <div className="mt-3">
+        <StockTabs
+          ticker={ticker as TickerData}
+          detail={tabDetail}
+          news={newsData as NewsItem[]}
           symbol={ticker.symbol}
-          aiCausalStory={detail?.ai_causal_story ?? null}
-          aiEarningsSummary={detail?.ai_earnings_summary ?? null}
-          aiOpinion={(detail?.ai_opinion as 'buy_consider' | 'caution' | 'hold' | null) ?? null}
-          aiOpinionReason={detail?.ai_opinion_reason ?? null}
-          analyzedAt={detail?.ai_analyzed_at ?? null}
         />
-        <RelatedNews news={newsData as NewsItem[]} />
+      </div>
+
+      {/* 커뮤니티 링크 */}
+      <div className="px-3 mt-3">
         <Link
           href={`/community?symbol=${ticker.symbol}`}
           className="flex items-center justify-center py-3 rounded-xl border border-gray-200 bg-white text-sm font-medium text-gray-700 hover:bg-gray-50 transition-colors shadow-sm"
