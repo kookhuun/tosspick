@@ -7,6 +7,7 @@ const NAV_ITEMS = [
   { label: '홈', route: '/' },
   { label: '시장', route: '/market' },
   { label: '검색', route: '/search' },
+  { label: '모의투자', route: '/trading' },
   { label: '커뮤니티', route: '/community' },
   { label: '학습', route: '/learn' },
   { label: '글로벌', route: '/global' },

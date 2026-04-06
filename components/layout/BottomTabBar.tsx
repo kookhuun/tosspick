@@ -7,6 +7,7 @@ const TABS = [
   { id: 'home', label: '홈', route: '/' },
   { id: 'market', label: '시장', route: '/market' },
   { id: 'search', label: '검색', route: '/search' },
+  { id: 'trading', label: '모의투자', route: '/trading' },
   { id: 'learn', label: '학습', route: '/learn' },
   { id: 'my', label: '마이', route: '/my' },
 ]
