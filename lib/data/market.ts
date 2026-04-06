@@ -157,3 +157,43 @@ export const getOverseasSectors = unstable_cache(
   ['overseas-sectors'],
   { tags: ['tickers'], revalidate: 600 }
 )
+
+// 홈 화면용 — 변동 가장 큰 종목 TOP20 (상승/하락 합산)
+export interface BigMover {
+  id: string
+  symbol: string
+  name: string
+  market: string
+  current_price: number
+  price_change: number
+  price_change_rate: number
+}
+
+export const getBiggestMovers = unstable_cache(
+  async (limit = 20): Promise<BigMover[]> => {
+    const supabase = createPublicClient()
+
+    // 상승 TOP10 + 하락 TOP10 병렬 조회
+    const [gainersRes, losersRes] = await Promise.allSettled([
+      supabase
+        .from('tickers')
+        .select('id, symbol, name, market, current_price, price_change, price_change_rate')
+        .order('price_change_rate', { ascending: false })
+        .limit(limit / 2),
+      supabase
+        .from('tickers')
+        .select('id, symbol, name, market, current_price, price_change, price_change_rate')
+        .order('price_change_rate', { ascending: true })
+        .limit(limit / 2),
+    ])
+
+    const gainers = gainersRes.status === 'fulfilled' ? (gainersRes.value.data ?? []) : []
+    const losers = losersRes.status === 'fulfilled' ? (losersRes.value.data ?? []) : []
+
+    // 변동률 절댓값 기준 내림차순 정렬
+    return [...gainers, ...losers]
+      .sort((a, b) => Math.abs(b.price_change_rate) - Math.abs(a.price_change_rate)) as BigMover[]
+  },
+  ['biggest-movers'],
+  { tags: ['tickers'], revalidate: 600 }
+)

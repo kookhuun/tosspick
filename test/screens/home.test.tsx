@@ -23,20 +23,24 @@ const mockNewsItems = [
   {
     id: 1,
     title: '삼성전자 실적 호조',
+    ai_headline: '삼성전자, 영업이익 10조 돌파',
     summary_one_line: '3분기 영업이익 10조 달성',
     impact_direction: 'positive' as const,
     related_tickers: ['005930'],
     source_url: 'https://example.com/1',
     published_at: '2026-04-05T10:00:00Z',
+    image_url: null,
   },
   {
     id: 2,
     title: 'KOSPI 하락',
+    ai_headline: '외국인 매도에 코스피 1% 급락',
     summary_one_line: '외국인 매도로 1% 하락',
     impact_direction: 'negative' as const,
     related_tickers: [],
     source_url: 'https://example.com/2',
     published_at: '2026-04-05T09:00:00Z',
+    image_url: null,
   },
 ]
 
@@ -50,21 +54,21 @@ describe('NewsCard', () => {
     expect(screen.getByText('긍정')).toBeInTheDocument()
   })
 
-  it('원문 보기 링크가 새 탭으로 열린다', async () => {
+  it('카드 전체가 원문 링크로 연결된다', async () => {
     const { default: NewsCard } = await import('@/components/news/NewsCard')
     render(<NewsCard item={mockNewsItems[0]} />)
 
-    const link = screen.getByText('원문 보기')
-    expect(link.closest('a')).toHaveAttribute('href', 'https://example.com/1')
-    expect(link.closest('a')).toHaveAttribute('target', '_blank')
+    const headline = screen.getByText('삼성전자, 영업이익 10조 돌파')
+    const link = headline.closest('a')
+    expect(link).toHaveAttribute('href', 'https://example.com/1')
+    expect(link).toHaveAttribute('target', '_blank')
   })
 
-  it('종목 태그 클릭 시 /stock/[symbol]로 이동한다', async () => {
+  it('관련 종목 코드가 표시된다', async () => {
     const { default: NewsCard } = await import('@/components/news/NewsCard')
     render(<NewsCard item={mockNewsItems[0]} />)
 
-    const tag = screen.getByText('005930')
-    expect(tag.closest('a')).toHaveAttribute('href', '/stock/005930')
+    expect(screen.getByText('005930')).toBeInTheDocument()
   })
 })
 

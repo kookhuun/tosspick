@@ -1,54 +1,75 @@
-// @TASK P2-S1-T1 - S1 홈 화면
-// 갱신 전략:
-//   1. getNewsItems() → unstable_cache (30분) 로 즉시 응답
-//   2. after() → 응답 후 백그라운드에서 RSS 수집 + Claude 요약 + DB 저장
-//      단, 30분 이내에 이미 수집된 경우 건너뜀 (불필요한 API 비용 방지)
+// S1 홈 화면 — 오늘의 뉴스 | 오늘의 주식현황 | 내 종목
+// 갱신: after()로 응답 후 백그라운드에서 RSS+Gemini 자동 수집 (30분 간격)
 import { after } from 'next/server'
 import { Suspense } from 'react'
 import { createClient } from '@/lib/supabase/server'
 import NewsCardList from '@/components/news/NewsCardList'
-import LoginNudgeBanner from '@/components/home/LoginNudgeBanner'
+import StockMarketStatus from '@/components/home/StockMarketStatus'
+import MyPortfolio from '@/components/home/MyPortfolio'
 import { getNewsItems } from '@/lib/data/news'
+import { getBiggestMovers } from '@/lib/data/market'
 import { collectAndSaveNews } from '@/lib/refresh/news'
 import type { NewsItem } from '@/components/news/NewsCard'
 
-async function getUser() {
+async function getSessionData() {
   try {
     const supabase = await createClient()
     const { data: { user } } = await supabase.auth.getUser()
-    return user
+    if (!user) return { user: null, watchlist: [] }
+
+    // 관심주 조회
+    const { data: watchlist } = await supabase
+      .from('watchlist_items')
+      .select('tickers(id, symbol, name, current_price, price_change_rate)')
+      .eq('user_id', user.id)
+      .limit(10)
+
+    const tickers = (watchlist ?? [])
+      .map((w) => w.tickers)
+      .filter(Boolean)
+      .flat() as { symbol: string; name: string; current_price: number; price_change_rate: number }[]
+
+    return { user, watchlist: tickers }
   } catch {
-    return null
+    return { user: null, watchlist: [] }
   }
 }
 
-async function NewsFeed() {
-  const items = await getNewsItems(10)
-  return <NewsCardList items={items as NewsItem[]} />
-}
-
 export default async function HomePage() {
-  const user = await getUser()
+  const [{ user, watchlist }, news, movers] = await Promise.all([
+    getSessionData(),
+    getNewsItems(12),
+    getBiggestMovers(20),
+  ])
 
-  // 응답을 보낸 뒤 백그라운드에서 뉴스 갱신 시도
-  // 30분 이내 수집된 경우 자동으로 건너뜀 → Claude API 비용 절약
+  // 응답 후 백그라운드에서 뉴스 갱신 (30분 간격, Gemini 무료 티어)
   after(async () => {
-    try {
-      await collectAndSaveNews()
-    } catch {
-      // 갱신 실패해도 사용자에게 영향 없음
-    }
+    try { await collectAndSaveNews() } catch { /* 실패해도 사용자에게 영향 없음 */ }
   })
 
   return (
-    <main className="flex flex-col gap-4 p-4 max-w-2xl mx-auto">
-      <LoginNudgeBanner isAuthenticated={!!user} />
+    <main className="flex flex-col gap-6 p-4 max-w-2xl mx-auto pb-24">
+
+      {/* ① 오늘의 뉴스 */}
       <section>
         <h2 className="text-base font-bold text-gray-900 mb-3">오늘의 뉴스</h2>
         <Suspense fallback={<p className="text-sm text-gray-400 py-4 text-center">뉴스 불러오는 중...</p>}>
-          <NewsFeed />
+          <NewsCardList items={news as NewsItem[]} />
         </Suspense>
       </section>
+
+      {/* ② 오늘의 주식현황 — 변동 큰 순서 */}
+      <section>
+        <h2 className="text-base font-bold text-gray-900 mb-3">오늘의 주식현황</h2>
+        <StockMarketStatus movers={movers} />
+      </section>
+
+      {/* ③ 내가 투자한 종목 */}
+      <section>
+        <h2 className="text-base font-bold text-gray-900 mb-3">내 종목</h2>
+        <MyPortfolio isLoggedIn={!!user} tickers={watchlist} />
+      </section>
+
     </main>
   )
 }
