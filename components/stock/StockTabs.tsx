@@ -1,7 +1,8 @@
-// @TASK P4-회사분석 - 탭 전환 Client Component
+// @TASK P4-회사분석, P4-커뮤니티 - 탭 전환 Client Component
 'use client'
 
 import { useState } from 'react'
+import { useRouter } from 'next/navigation'
 import KeyIndicators from '@/components/stock/KeyIndicators'
 import RelatedNews from '@/components/stock/RelatedNews'
 import CompanyOverview from '@/components/stock/analysis/CompanyOverview'
@@ -18,16 +19,18 @@ interface StockTabsProps {
   symbol: string
 }
 
-type TabId = 'info' | 'news' | 'analysis'
+type TabId = 'info' | 'news' | 'analysis' | 'community'
 
 const TABS: { id: TabId; label: string }[] = [
   { id: 'info', label: '기업정보' },
   { id: 'news', label: '뉴스' },
   { id: 'analysis', label: '회사 분석' },
+  { id: 'community', label: '커뮤니티' },
 ]
 
 export default function StockTabs({ ticker, detail, news, symbol }: StockTabsProps) {
   const [activeTab, setActiveTab] = useState<TabId>('info')
+  const router = useRouter()
 
   return (
     <div>
@@ -43,7 +46,13 @@ export default function StockTabs({ ticker, detail, news, symbol }: StockTabsPro
                 aria-selected={isActive}
                 aria-controls={`tabpanel-${tab.id}`}
                 id={`tab-${tab.id}`}
-                onClick={() => setActiveTab(tab.id)}
+                onClick={() => {
+                  if (tab.id === 'community') {
+                    router.push(`/community/${symbol}`)
+                  } else {
+                    setActiveTab(tab.id)
+                  }
+                }}
                 className={`
                   relative flex-1 py-3 text-sm font-medium transition-colors
                   ${isActive ? 'text-blue-600' : 'text-gray-400 hover:text-gray-600'}

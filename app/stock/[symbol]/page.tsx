@@ -1,7 +1,6 @@
 // @TASK P3-S4-T1, P3-S4-T2, P4-회사분석 - 종목 상세 화면 (3탭 구조)
 // 종목 데이터: unstable_cache (5분) → lib/data/tickers.ts
 import { notFound } from 'next/navigation'
-import Link from 'next/link'
 import StockHeader from '@/components/stock/StockHeader'
 import PriceChart from '@/components/stock/PriceChart'
 import StockTabs from '@/components/stock/StockTabs'
@@ -61,15 +60,6 @@ export default async function StockPage({ params }: PageProps) {
         />
       </div>
 
-      {/* 커뮤니티 링크 */}
-      <div className="px-3 mt-3">
-        <Link
-          href={`/community?symbol=${ticker.symbol}`}
-          className="flex items-center justify-center py-3 rounded-xl border border-gray-200 bg-white text-sm font-medium text-gray-700 hover:bg-gray-50 transition-colors shadow-sm"
-        >
-          {ticker.name} 커뮤니티 보기 →
-        </Link>
-      </div>
     </main>
   )
 }
