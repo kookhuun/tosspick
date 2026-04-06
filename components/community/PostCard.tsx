@@ -1,4 +1,5 @@
 // @TASK P4-커뮤니티 - 게시글 카드 컴포넌트 (에브리타임 스타일)
+// @TASK P4-프로필 - 작성자 닉네임 → 프로필 링크 연결
 
 import Link from 'next/link'
 import { formatRelativeTime } from '@/lib/community/format-time'
@@ -35,7 +36,18 @@ export default function PostCard({ post, symbol }: PostCardProps) {
             {CATEGORY_LABEL[post.category]}
           </span>
           <span className="text-xs text-gray-400">
-            {post.author.nickname} · {formatRelativeTime(post.created_at)}
+            {post.author.id ? (
+              <Link
+                href={`/profile/${post.author.id}`}
+                onClick={(e) => e.stopPropagation()}
+                className="hover:text-[#3182F6] transition-colors"
+              >
+                {post.author.nickname}
+              </Link>
+            ) : (
+              post.author.nickname
+            )}
+            {' '}· {formatRelativeTime(post.created_at)}
           </span>
         </div>
 

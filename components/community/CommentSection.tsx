@@ -1,9 +1,11 @@
 // @TASK P4-커뮤니티 - 댓글 섹션 (댓글 + 대댓글 1단계)
+// @TASK P4-프로필 - 댓글 작성자 닉네임 → 프로필 링크 연결
 
 'use client'
 
 import { useState } from 'react'
 import { useRouter } from 'next/navigation'
+import Link from 'next/link'
 import { formatRelativeTime } from '@/lib/community/format-time'
 import type { Comment } from '@/lib/community/mock-data'
 
@@ -36,7 +38,16 @@ function CommentItem({ comment, isReply = false, isLoggedIn, onReply }: CommentI
       <div className="py-3">
         {/* 작성자 + 시간 */}
         <div className="flex items-center gap-2 mb-1">
-          <span className="text-xs font-semibold text-gray-800">{comment.author.nickname}</span>
+          {comment.author.id ? (
+            <Link
+              href={`/profile/${comment.author.id}`}
+              className="text-xs font-semibold text-gray-800 hover:text-[#3182F6] transition-colors"
+            >
+              {comment.author.nickname}
+            </Link>
+          ) : (
+            <span className="text-xs font-semibold text-gray-800">{comment.author.nickname}</span>
+          )}
           <span className="text-xs text-gray-400">{formatRelativeTime(comment.created_at)}</span>
         </div>
 

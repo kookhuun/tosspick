@@ -3,6 +3,7 @@
 export type PostCategory = 'general' | 'question' | 'bullish' | 'bearish'
 
 export interface PostAuthor {
+  id?: string
   nickname: string
 }
 
@@ -47,7 +48,7 @@ export const MOCK_POSTS: Post[] = [
     dislike_count: 2,
     comment_count: 8,
     created_at: new Date(now - 600_000).toISOString(),
-    author: { nickname: '투자고수김' },
+    author: { id: 'user-1', nickname: '투자고수김' },
     ticker_id: 'AAPL',
   },
   {
@@ -60,7 +61,7 @@ export const MOCK_POSTS: Post[] = [
     dislike_count: 3,
     comment_count: 15,
     created_at: new Date(now - 1_800_000).toISOString(),
-    author: { nickname: '반도체덕후' },
+    author: { id: 'user-2', nickname: '반도체덕후' },
     ticker_id: 'AAPL',
   },
   {
@@ -73,7 +74,7 @@ export const MOCK_POSTS: Post[] = [
     dislike_count: 12,
     comment_count: 22,
     created_at: new Date(now - 3_600_000).toISOString(),
-    author: { nickname: '가치투자자박' },
+    author: { id: 'user-3', nickname: '가치투자자박' },
     ticker_id: 'AAPL',
   },
   {
@@ -86,7 +87,7 @@ export const MOCK_POSTS: Post[] = [
     dislike_count: 1,
     comment_count: 11,
     created_at: new Date(now - 7_200_000).toISOString(),
-    author: { nickname: '워렌을꿈꾸며' },
+    author: { id: 'user-1', nickname: '워렌을꿈꾸며' },
     ticker_id: 'AAPL',
   },
   {
@@ -99,7 +100,7 @@ export const MOCK_POSTS: Post[] = [
     dislike_count: 0,
     comment_count: 4,
     created_at: new Date(now - 14_400_000).toISOString(),
-    author: { nickname: '이코노미스트최' },
+    author: { id: 'user-2', nickname: '이코노미스트최' },
     ticker_id: 'AAPL',
   },
 ]
@@ -110,7 +111,7 @@ export const MOCK_COMMENTS: Comment[] = [
     content: '저도 긍정적으로 보고 있어요. AI 관련 수요가 계속 늘고 있으니까요.',
     like_count: 5,
     created_at: new Date(now - 300_000).toISOString(),
-    author: { nickname: '장기투자자' },
+    author: { id: 'user-3', nickname: '장기투자자' },
     parent_comment_id: null,
     replies: [
       {
@@ -118,7 +119,7 @@ export const MOCK_COMMENTS: Comment[] = [
         content: '동의합니다. 근데 주가 이미 많이 올랐으니 조심도 필요하죠.',
         like_count: 2,
         created_at: new Date(now - 240_000).toISOString(),
-        author: { nickname: '신중론자' },
+        author: { id: 'user-2', nickname: '신중론자' },
         parent_comment_id: 'c1',
         replies: [],
       },
@@ -129,7 +130,7 @@ export const MOCK_COMMENTS: Comment[] = [
     content: '컨센서스 EPS가 얼마인지 아시는 분 계세요?',
     like_count: 3,
     created_at: new Date(now - 180_000).toISOString(),
-    author: { nickname: '초보투자자정' },
+    author: { id: 'user-2', nickname: '초보투자자정' },
     parent_comment_id: null,
     replies: [
       {
@@ -137,7 +138,7 @@ export const MOCK_COMMENTS: Comment[] = [
         content: '지난 분기 대비 8% 상향 전망입니다. 블룸버그 컨센서스 기준이요.',
         like_count: 7,
         created_at: new Date(now - 120_000).toISOString(),
-        author: { nickname: '애널리스트김' },
+        author: { id: 'user-1', nickname: '애널리스트김' },
         parent_comment_id: 'c3',
         replies: [],
       },
@@ -148,7 +149,7 @@ export const MOCK_COMMENTS: Comment[] = [
     content: '저는 이미 일부 익절했습니다. 리스크 관리 차원에서요.',
     like_count: 4,
     created_at: new Date(now - 60_000).toISOString(),
-    author: { nickname: '리스크헤저' },
+    author: { id: 'user-3', nickname: '리스크헤저' },
     parent_comment_id: null,
     replies: [],
   },
@@ -167,7 +168,7 @@ export const MOCK_GLOBAL_POSTS: GlobalPost[] = [
     dislike_count: 3,
     comment_count: 15,
     created_at: new Date(now - 2 * 60_000).toISOString(),
-    author: { nickname: '반도체덕후' },
+    author: { id: 'user-2', nickname: '반도체덕후' },
   },
   {
     id: 'g2',
@@ -180,7 +181,7 @@ export const MOCK_GLOBAL_POSTS: GlobalPost[] = [
     dislike_count: 2,
     comment_count: 8,
     created_at: new Date(now - 5 * 60_000).toISOString(),
-    author: { nickname: '투자고수김' },
+    author: { id: 'user-1', nickname: '투자고수김' },
   },
   {
     id: 'g3',
@@ -193,7 +194,7 @@ export const MOCK_GLOBAL_POSTS: GlobalPost[] = [
     dislike_count: 5,
     comment_count: 22,
     created_at: new Date(now - 12 * 60_000).toISOString(),
-    author: { nickname: '가치투자자박' },
+    author: { id: 'user-3', nickname: '가치투자자박' },
   },
   {
     id: 'g4',
@@ -206,7 +207,7 @@ export const MOCK_GLOBAL_POSTS: GlobalPost[] = [
     dislike_count: 1,
     comment_count: 14,
     created_at: new Date(now - 18 * 60_000).toISOString(),
-    author: { nickname: '전기차러버' },
+    author: { id: 'user-2', nickname: '전기차러버' },
   },
   {
     id: 'g5',
@@ -219,7 +220,7 @@ export const MOCK_GLOBAL_POSTS: GlobalPost[] = [
     dislike_count: 1,
     comment_count: 11,
     created_at: new Date(now - 25 * 60_000).toISOString(),
-    author: { nickname: '클라우드전도사' },
+    author: { id: 'user-1', nickname: '클라우드전도사' },
   },
   {
     id: 'g6',
@@ -232,7 +233,7 @@ export const MOCK_GLOBAL_POSTS: GlobalPost[] = [
     dislike_count: 4,
     comment_count: 7,
     created_at: new Date(now - 40 * 60_000).toISOString(),
-    author: { nickname: '국내주식러' },
+    author: { id: 'user-3', nickname: '국내주식러' },
   },
   {
     id: 'g7',
@@ -245,7 +246,7 @@ export const MOCK_GLOBAL_POSTS: GlobalPost[] = [
     dislike_count: 0,
     comment_count: 6,
     created_at: new Date(now - 55 * 60_000).toISOString(),
-    author: { nickname: '주린이최' },
+    author: { id: 'user-2', nickname: '주린이최' },
   },
   {
     id: 'g8',
@@ -258,7 +259,7 @@ export const MOCK_GLOBAL_POSTS: GlobalPost[] = [
     dislike_count: 8,
     comment_count: 19,
     created_at: new Date(now - 80 * 60_000).toISOString(),
-    author: { nickname: '밸류투자자정' },
+    author: { id: 'user-1', nickname: '밸류투자자정' },
   },
   {
     id: 'g9',
@@ -271,7 +272,7 @@ export const MOCK_GLOBAL_POSTS: GlobalPost[] = [
     dislike_count: 2,
     comment_count: 13,
     created_at: new Date(now - 2 * 3_600_000).toISOString(),
-    author: { nickname: '반도체분석가' },
+    author: { id: 'user-3', nickname: '반도체분석가' },
   },
   {
     id: 'g10',
@@ -284,6 +285,6 @@ export const MOCK_GLOBAL_POSTS: GlobalPost[] = [
     dislike_count: 3,
     comment_count: 5,
     created_at: new Date(now - 3 * 3_600_000).toISOString(),
-    author: { nickname: '광고산업분석' },
+    author: { id: 'user-2', nickname: '광고산업분석' },
   },
 ]
