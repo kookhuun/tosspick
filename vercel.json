@@ -2,25 +2,4 @@
   "framework": "nextjs",
   "buildCommand": "npm run build",
   "installCommand": "npm install"
-
-  // ================================================================
-  // [나중에 유료 cron 추가할 때] 아래 주석을 해제하고 사용
-  // Vercel 무료: 하루 1회 (daily) 만 가능
-  // Vercel Pro: 분 단위 cron 가능
-  // ================================================================
-  //
-  // "crons": [
-  //   {
-  //     "path": "/api/cron/collect-news",
-  //     "schedule": "0 9 * * *"      // 매일 오전 9시 (UTC) 뉴스 수집
-  //   },
-  //   {
-  //     "path": "/api/cron/refresh-market",
-  //     "schedule": "0 0 * * *"      // 매일 자정 시장 데이터 갱신
-  //   },
-  //   {
-  //     "path": "/api/cron/refresh-tickers",
-  //     "schedule": "0 1 * * *"      // 매일 오전 1시 종목 현황 갱신
-  //   }
-  // ]
 }
