@@ -1,7 +1,8 @@
-// @TASK P2-R1-T1 - Claude API로 AI 요약
-// @SPEC docs/planning/02-trd.md#AI-요약
+// 뉴스 AI 요약 — Gemini 1.5 Flash 사용
+// 무료 티어: 하루 1,500회, 분당 15회 (뉴스 갱신에 충분)
+// API 키: https://aistudio.google.com/app/apikey 에서 무료 발급
 
-import Anthropic from '@anthropic-ai/sdk'
+import { GoogleGenAI } from '@google/genai'
 
 export interface NewsSummary {
   summary_one_line: string
@@ -9,16 +10,18 @@ export interface NewsSummary {
   related_tickers: string[]
 }
 
-const SYSTEM_PROMPT = `뉴스 제목과 본문을 분석하여 JSON으로만 응답하세요 (다른 텍스트 없이):
+const PROMPT_TEMPLATE = (title: string, description: string) => `
+뉴스 제목과 본문을 분석하여 JSON으로만 응답하세요 (다른 텍스트 없이):
 {
   "summary_one_line": "50자 이내 한국어 요약",
-  "impact_direction": "positive|negative|neutral",
-  "related_tickers": ["005930", "AAPL"] // 최대 3개, 없으면 빈 배열
-}`
+  "impact_direction": "positive 또는 negative 또는 neutral",
+  "related_tickers": ["005930", "AAPL"]
+}
 
-/**
- * 뉴스 제목과 본문을 AI로 요약합니다.
- */
+제목: ${title}
+본문: ${description}
+`.trim()
+
 export async function summarizeNews(
   title: string,
   description: string | null
@@ -30,28 +33,20 @@ export async function summarizeNews(
   }
 
   try {
-    const client = new Anthropic({ apiKey: process.env.ANTHROPIC_API_KEY })
+    const apiKey = process.env.GEMINI_API_KEY
+    if (!apiKey) throw new Error('GEMINI_API_KEY 미설정')
 
-    const message = await client.messages.create({
-      model: 'claude-haiku-4-5-20251001',
-      max_tokens: 256,
-      messages: [
-        {
-          role: 'user',
-          content: `제목: ${title}\n본문: ${description ?? '(본문 없음)'}`,
-        },
-      ],
-      system: SYSTEM_PROMPT,
+    const ai = new GoogleGenAI({ apiKey })
+    const response = await ai.models.generateContent({
+      model: 'gemini-1.5-flash',
+      contents: PROMPT_TEMPLATE(title, description ?? '(본문 없음)'),
     })
 
-    const textBlock = message.content.find((block) => block.type === 'text')
-    if (!textBlock || textBlock.type !== 'text') {
-      return fallback
-    }
+    const text = response.text?.trim() ?? ''
+    // ```json ... ``` 블록 제거
+    const clean = text.replace(/^```json\s*/i, '').replace(/\s*```$/, '').trim()
+    const parsed = JSON.parse(clean) as NewsSummary
 
-    const parsed = JSON.parse(textBlock.text) as NewsSummary
-
-    // 유효성 검증
     if (
       typeof parsed.summary_one_line !== 'string' ||
       !['positive', 'negative', 'neutral'].includes(parsed.impact_direction) ||
