@@ -23,6 +23,7 @@ export async function updateProfile(updates: { nickname?: string; avatar_url?: s
     .from('user_profiles')
     .update(updates)
     .eq('id', user.id)
+    .select('id, nickname, avatar_url, provider, created_at')
     .single()
 
   return { data, error }

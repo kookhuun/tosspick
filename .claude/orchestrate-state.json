@@ -1,0 +1,32 @@
+{
+  "project": "tosspick",
+  "project_root": "/Users/gukhyun/ai/project1/tosspick",
+  "tasks_doc": "/Users/gukhyun/ai/project1/docs/planning/06-tasks.md",
+  "mode": "normal",
+  "started_at": "2026-04-05",
+  "current_phase": "P0",
+  "completed_tasks": [
+    "P0-T0.1",
+    "P0-T0.2",
+    "P0-T0.3",
+    "P0-T0.4",
+    "P0-T0.5"
+  ],
+  "in_progress_tasks": [],
+  "failed_tasks": [],
+  "phase_status": {
+    "P0": "completed",
+    "P1": "pending",
+    "P2": "pending",
+    "P3": "pending",
+    "P4": "pending",
+    "P5": "pending"
+  },
+  "notes": {
+    "P0-T0.1": "DONE: Next.js 16 project created via create-next-app",
+    "P0-T0.2": "PARTIAL: Migration SQL written. supabase start needs Docker Desktop",
+    "P0-T0.3": "PARTIAL: .env.local template created. Real API keys needed",
+    "P0-T0.4": "DONE: vercel.json + GitHub Actions created",
+    "P0-T0.5": "PENDING: Vitest + Playwright not yet installed"
+  }
+}
