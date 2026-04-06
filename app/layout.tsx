@@ -4,6 +4,7 @@ import "./globals.css";
 import BottomTabBar from "@/components/layout/BottomTabBar";
 import TopNavbar from "@/components/layout/TopNavbar";
 import AppHeader from "@/components/layout/AppHeader";
+import FloatingHelper from "@/components/learn/FloatingHelper";
 
 const geistSans = Geist({
   variable: "--font-geist-sans",
@@ -31,6 +32,8 @@ export default function RootLayout({
         <main className="flex-1 pb-16 md:pb-0">{children}</main>
         {/* 모바일 하단 탭바 */}
         <BottomTabBar />
+        {/* 전역 플로팅 헬퍼 버튼 */}
+        <FloatingHelper />
       </body>
     </html>
   );
