@@ -4,6 +4,12 @@
 
 import { createClient } from '@supabase/supabase-js'
 
+export function hasSupabase(): boolean {
+  const url = process.env.NEXT_PUBLIC_SUPABASE_URL
+  const key = process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY
+  return !!(url && key && key !== 'your-anon-key-here' && url.startsWith('http'))
+}
+
 export function createPublicClient() {
   return createClient(
     process.env.NEXT_PUBLIC_SUPABASE_URL!,

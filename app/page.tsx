@@ -42,10 +42,12 @@ export default async function HomePage() {
     getBiggestMovers(20),
   ])
 
-  // 응답 후 백그라운드에서 뉴스 갱신 (30분 간격, Gemini 무료 티어)
-  after(async () => {
-    try { await collectAndSaveNews() } catch { /* 실패해도 사용자에게 영향 없음 */ }
-  })
+  // 응답 후 백그라운드에서 뉴스 갱신 (Gemini API key 있을 때만)
+  if (process.env.GEMINI_API_KEY) {
+    after(async () => {
+      try { await collectAndSaveNews() } catch { /* 실패해도 사용자에게 영향 없음 */ }
+    })
+  }
 
   return (
     <main className="flex flex-col gap-6 p-4 max-w-2xl mx-auto pb-24">
