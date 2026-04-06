@@ -1,6 +1,6 @@
 // @TASK P2-S2-T1
 export interface Sector {
-  id: number
+  id: string | number
   name: string
   change_rate: number
   color: string

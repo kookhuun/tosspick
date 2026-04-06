@@ -4,7 +4,7 @@ import { useState } from 'react'
 import Link from 'next/link'
 
 export interface Mover {
-  id: number
+  id: string | number
   symbol: string
   name: string
   price_change_rate: number

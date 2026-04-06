@@ -2,7 +2,7 @@
 import ImpactBadge from '@/components/ui/ImpactBadge'
 
 export interface NewsItem {
-  id: number
+  id: string | number
   title: string
   summary_one_line: string
   impact_direction: 'positive' | 'negative' | 'neutral'
