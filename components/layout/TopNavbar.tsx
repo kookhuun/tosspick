@@ -37,6 +37,7 @@ export default function TopNavbar() {
               {item.label}
             </Link>
           ))}
+          <span className="text-sm font-medium text-gray-400 cursor-default">안국현바보</span>
         </nav>
       </div>
       <div className="flex items-center gap-3">
