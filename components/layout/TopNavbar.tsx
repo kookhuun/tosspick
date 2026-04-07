@@ -12,6 +12,7 @@ const NAV_ITEMS = [
   { label: '학습', route: '/learn' },
   { label: '글로벌', route: '/global' },
   { label: '마이', route: '/my' },
+  { label: '안국현바보', route: '/babo' },
 ]
 
 export default function TopNavbar() {
@@ -37,7 +38,6 @@ export default function TopNavbar() {
               {item.label}
             </Link>
           ))}
-          <span className="text-sm font-medium text-gray-400 cursor-default">안국현바보</span>
         </nav>
       </div>
       <div className="flex items-center gap-3">
