@@ -1,3 +1,5 @@
+"use client"
+
 export default function BaboPage() {
   return (
     <div className="flex flex-col items-center justify-center min-h-[70vh] gap-4 p-6 text-center">
