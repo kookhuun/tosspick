@@ -33,8 +33,8 @@ export default async function StockPage({ params }: PageProps) {
     pbr: detail?.pbr ?? null,
     eps: detail?.eps ?? null,
     dividend_rate: detail?.dividend_rate ?? null,
-    market_cap: ticker.market_cap,
-    volume: ticker.volume,
+    market_cap: (ticker as any).market_cap,
+    volume: (ticker as any).volume,
   }
 
   return (

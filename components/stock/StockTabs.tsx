@@ -105,8 +105,8 @@ export default function StockTabs({ ticker, detail, news, symbol }: StockTabsPro
             <>
               <CompanyOverview
                 symbol={symbol}
-                marketCap={ticker.market_cap}
-                volume={ticker.volume}
+                marketCap={(ticker as any).market_cap}
+                volume={(ticker as any).volume}
               />
               <div className="mt-3">
                 <FinancialAnalysis

@@ -79,7 +79,7 @@ export default function CandleChart({
     const xStep = Math.max(1, Math.floor(candles.length / 6))
     const xTicks: { time: number; x: number }[] = []
     for (let i = 0; i < candles.length; i += xStep) {
-      xTicks.push({ time: candles[i].time, x: xPos(i) })
+      xTicks.push({ time: candles[i].time as any, x: xPos(i) })
     }
 
     const lastCandle = candles[candles.length - 1]

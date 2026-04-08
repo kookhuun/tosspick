@@ -39,13 +39,11 @@ export async function summarizeNews(
     const apiKey = process.env.GEMINI_API_KEY
     if (!apiKey) throw new Error('GEMINI_API_KEY 미설정')
 
-    const ai = new GoogleGenAI({ apiKey })
-    const response = await ai.models.generateContent({
-      model: 'gemini-1.5-flash',
-      contents: PROMPT(title, description ?? '(본문 없음)'),
-    })
-
-    const text = response.text?.trim() ?? ''
+    const genAI = new GoogleGenerativeAI(apiKey)
+    const model = genAI.getGenerativeModel({ model: 'gemini-1.5-flash' })
+    const result = await model.generateContent(PROMPT(title, description ?? '(본문 없음)'))
+    const response = await result.response
+    const text = response.text() ?? ''
     const clean = text.replace(/^```json\s*/i, '').replace(/\s*```$/, '').trim()
     const parsed = JSON.parse(clean) as NewsSummary
 

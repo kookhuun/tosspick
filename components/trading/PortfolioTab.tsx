@@ -148,7 +148,7 @@ export default function PortfolioTab({ balance, positions, history }: PortfolioT
                   </div>
                   <div className="text-right">
                     <p className={`text-sm font-semibold ${isBuy ? 'text-red-600' : 'text-blue-600'}`}>
-                      {isBuy ? '-' : '+'}{formatKRW(h.total)}
+                      {isBuy ? '-' : '+'}{formatKRW((h as any).total)}
                     </p>
                     <p className="text-xs text-gray-400">{dateStr}</p>
                   </div>
