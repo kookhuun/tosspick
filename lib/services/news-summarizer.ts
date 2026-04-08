@@ -2,7 +2,7 @@
 // 무료 티어: 하루 1,500회, 분당 15회
 // API 키 발급: https://aistudio.google.com/app/apikey
 
-import { GoogleGenAI } from '@google/genai'
+import { GoogleGenerativeAI } from '@google/generative-ai'
 
 export interface NewsSummary {
   ai_headline: string        // AI가 생성한 캐치한 한국어 헤드라인 (30자 이내)

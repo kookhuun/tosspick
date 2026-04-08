@@ -31,22 +31,38 @@ export default function GlobalWriteModal({ isLoggedIn, onClose, onSuccess }: Glo
   if (!isLoggedIn) {
     return (
       <div
-        className="fixed inset-0 z-50 flex items-end justify-center bg-black/40"
+        className="fixed inset-0 z-50 flex items-center justify-center bg-black/50 p-6 backdrop-blur-sm"
         onClick={onClose}
       >
         <div
-          className="w-full max-w-lg bg-white rounded-t-2xl p-6 pb-10"
+          className="w-full max-w-sm bg-white rounded-[32px] p-8 shadow-2xl animate-in fade-in zoom-in duration-200"
           onClick={(e) => e.stopPropagation()}
         >
-          <p className="text-center text-sm text-gray-700 mb-4">
-            글을 작성하려면 로그인이 필요합니다.
-          </p>
-          <button
-            onClick={() => router.push('/auth')}
-            className="w-full py-3 rounded-xl bg-blue-600 text-white text-sm font-semibold"
-          >
-            로그인하기
-          </button>
+          <div className="flex flex-col gap-6 text-center">
+            <div className="flex flex-col gap-2">
+              <span className="text-3xl">✏️</span>
+              <h2 className="text-xl font-extrabold text-gray-900 tracking-tight">투자 의견을 남겨보세요</h2>
+              <p className="text-sm text-gray-500 font-medium leading-relaxed">
+                로그인하면 종목에 대한 생각과<br />
+                분석 내용을 기록할 수 있어요.
+              </p>
+            </div>
+            
+            <div className="flex flex-col gap-3">
+              <button
+                onClick={() => router.push('/auth')}
+                className="w-full py-4 rounded-2xl bg-blue-600 text-white text-sm font-bold shadow-lg shadow-blue-100 hover:bg-blue-700 transition-all active:scale-95"
+              >
+                로그인하고 시작하기
+              </button>
+              <button
+                onClick={onClose}
+                className="w-full py-3 text-gray-400 text-xs font-bold hover:text-gray-600 transition-colors"
+              >
+                나중에 하기
+              </button>
+            </div>
+          </div>
         </div>
       </div>
     )
@@ -87,33 +103,31 @@ export default function GlobalWriteModal({ isLoggedIn, onClose, onSuccess }: Glo
 
   return (
     <div
-      className="fixed inset-0 z-50 flex items-end justify-center bg-black/40"
+      className="fixed inset-0 z-50 flex items-end justify-center bg-black/40 backdrop-blur-[2px]"
       onClick={onClose}
     >
       <div
-        className="w-full max-w-lg bg-white rounded-t-2xl p-5 pb-10 flex flex-col gap-4"
+        className="w-full max-w-lg bg-white rounded-t-[32px] p-6 pb-12 flex flex-col gap-5 animate-in slide-in-from-bottom duration-300"
         onClick={(e) => e.stopPropagation()}
         role="dialog"
         aria-modal="true"
         aria-labelledby="global-write-modal-title"
       >
-        {/* 헤더 */}
-        <div className="flex items-center justify-between">
-          <h2 id="global-write-modal-title" className="text-base font-bold text-gray-900">
-            글 작성
+        <div className="flex items-center justify-between mb-1">
+          <h2 id="global-write-modal-title" className="text-lg font-extrabold text-gray-900 tracking-tight">
+            의견 나누기
           </h2>
           <button
             onClick={onClose}
-            className="text-gray-400 hover:text-gray-600 text-xl leading-none w-8 h-8 flex items-center justify-center"
+            className="w-8 h-8 flex items-center justify-center rounded-full bg-gray-50 text-gray-400 hover:text-gray-600 transition-colors"
             aria-label="닫기"
           >
             ×
           </button>
         </div>
 
-        {/* 종목 코드 입력 */}
         <div>
-          <label htmlFor="symbol-input" className="block text-xs font-medium text-gray-600 mb-1">
+          <label htmlFor="symbol-input" className="block text-[10px] font-black text-gray-400 uppercase tracking-widest mb-1.5 ml-1">
             종목 코드
           </label>
           <input
@@ -123,18 +137,16 @@ export default function GlobalWriteModal({ isLoggedIn, onClose, onSuccess }: Glo
             value={symbol}
             onChange={(e) => setSymbol(e.target.value)}
             maxLength={20}
-            className="w-full border border-gray-200 rounded-xl px-4 py-3 text-sm text-gray-900 placeholder-gray-400 focus:outline-none focus:ring-2 focus:ring-blue-500"
+            className="w-full border border-gray-100 bg-gray-50 rounded-2xl px-5 py-3.5 text-sm text-gray-900 placeholder-gray-400 focus:outline-none focus:ring-2 focus:ring-blue-500 transition-all font-bold"
           />
         </div>
 
-        {/* 카테고리 */}
         <div className="flex gap-2" role="group" aria-label="카테고리 선택">
           {CATEGORIES.map((cat) => (
             <button
               key={cat.id}
               onClick={() => setCategory(cat.id)}
-              aria-pressed={category === cat.id}
-              className={`flex-1 py-1.5 text-xs rounded-lg border transition-colors ${
+              className={`flex-1 py-2.5 text-xs rounded-xl border transition-all ${
                 category === cat.id ? cat.activeStyle : cat.style
               }`}
             >
@@ -143,41 +155,35 @@ export default function GlobalWriteModal({ isLoggedIn, onClose, onSuccess }: Glo
           ))}
         </div>
 
-        {/* 제목 */}
         <input
           type="text"
-          placeholder="제목"
+          placeholder="제목을 적어주세요"
           value={title}
           onChange={(e) => setTitle(e.target.value)}
           maxLength={100}
-          className="w-full border border-gray-200 rounded-xl px-4 py-3 text-sm text-gray-900 placeholder-gray-400 focus:outline-none focus:ring-2 focus:ring-blue-500"
-          aria-label="제목"
+          className="w-full border border-gray-100 bg-gray-50 rounded-2xl px-5 py-3.5 text-sm text-gray-900 placeholder-gray-400 focus:outline-none focus:ring-2 focus:ring-blue-500 transition-all font-bold"
         />
 
-        {/* 내용 */}
         <textarea
-          placeholder="내용을 입력하세요 (최소 10자)"
+          placeholder="내용을 10자 이상 입력해주세요"
           value={content}
           onChange={(e) => setContent(e.target.value)}
-          rows={5}
-          className="w-full border border-gray-200 rounded-xl px-4 py-3 text-sm text-gray-900 placeholder-gray-400 resize-none focus:outline-none focus:ring-2 focus:ring-blue-500"
-          aria-label="내용"
+          rows={6}
+          className="w-full border border-gray-100 bg-gray-50 rounded-2xl px-5 py-3.5 text-sm text-gray-900 placeholder-gray-400 resize-none focus:outline-none focus:ring-2 focus:ring-blue-500 transition-all font-medium leading-relaxed"
         />
 
-        {/* 에러 */}
         {error && (
-          <p className="text-xs text-red-500" role="alert">
+          <p className="text-xs text-red-500 font-bold px-1" role="alert">
             {error}
           </p>
         )}
 
-        {/* 등록 버튼 */}
         <button
           onClick={handleSubmit}
           disabled={submitting}
-          className="w-full py-3 rounded-xl bg-blue-600 text-white text-sm font-semibold disabled:opacity-50 transition-opacity"
+          className="w-full py-4 rounded-2xl bg-blue-600 text-white text-sm font-black shadow-lg shadow-blue-100 hover:bg-blue-700 disabled:opacity-50 transition-all active:scale-95"
         >
-          {submitting ? '등록 중...' : '등록'}
+          {submitting ? '등록 중...' : '등록하기'}
         </button>
       </div>
     </div>

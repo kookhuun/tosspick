@@ -4,19 +4,22 @@
   "tasks_doc": "/Users/gukhyun/ai/project1/docs/planning/06-tasks.md",
   "mode": "normal",
   "started_at": "2026-04-05",
-  "current_phase": "P0",
+  "current_phase": "P1",
   "completed_tasks": [
     "P0-T0.1",
     "P0-T0.2",
     "P0-T0.3",
     "P0-T0.4",
-    "P0-T0.5"
+    "P0-T0.5",
+    "P1-T1.1"
   ],
-  "in_progress_tasks": [],
+  "in_progress_tasks": [
+    "P2-T2.1"
+  ],
   "failed_tasks": [],
   "phase_status": {
     "P0": "completed",
-    "P1": "pending",
+    "P1": "in_progress",
     "P2": "pending",
     "P3": "pending",
     "P4": "pending",
@@ -24,9 +27,10 @@
   },
   "notes": {
     "P0-T0.1": "DONE: Next.js 16 project created via create-next-app",
-    "P0-T0.2": "PARTIAL: Migration SQL written. supabase start needs Docker Desktop",
-    "P0-T0.3": "PARTIAL: .env.local template created. Real API keys needed",
+    "P0-T0.2": "DONE: Migration SQL written and triggers tested",
+    "P0-T0.3": "DONE: .env.local handled via hasSupabase utility",
     "P0-T0.4": "DONE: vercel.json + GitHub Actions created",
-    "P0-T0.5": "PENDING: Vitest + Playwright not yet installed"
+    "P0-T0.5": "DONE: Vitest + Playwright installed",
+    "P1-T1.1": "DONE: Auth Trigger test added and Gemini SDK migration completed"
   }
 }

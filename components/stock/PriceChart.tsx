@@ -1,52 +1,136 @@
-// @TASK P3-S4-T1 - 기간별 주가 차트 (1일/1주/1개월/3개월/1년)
-// NOTE: chart_data는 ticker_details.chart_data (jsonb) 에 저장.
-//       외부 툴이 주기적으로 갱신. 차트 라이브러리는 추후 연동.
 'use client'
 
-import { useState } from 'react'
-
-export type ChartPeriod = '1d' | '1w' | '1m' | '3m' | '1y'
+import { useState, useEffect, useMemo } from 'react'
+import { generateInitialCandles, generateNextTick, type CandleData } from '@/lib/trading/chart-generator'
 
 interface PriceChartProps {
-  // chart_data: { [period: ChartPeriod]: { t: number; v: number }[] }
-  chartData: Record<string, unknown>
+  chartData?: any
+  basePrice?: number
 }
 
-const PERIODS: { key: ChartPeriod; label: string }[] = [
-  { key: '1d', label: '1일' },
-  { key: '1w', label: '1주' },
-  { key: '1m', label: '1개월' },
-  { key: '3m', label: '3개월' },
-  { key: '1y', label: '1년' },
-]
+export default function PriceChart({ chartData, basePrice = 75000 }: PriceChartProps) {
+  const [data, setData] = useState<CandleData[]>([])
+  const [showGuide, setShowGuide] = useState(false)
 
-export default function PriceChart({ chartData }: PriceChartProps) {
-  const [period, setPeriod] = useState<ChartPeriod>('1m')
-  const periodData = chartData[period]
+  // 1. 초기 데이터 생성
+  useEffect(() => {
+    const initial = generateInitialCandles(40, basePrice)
+    setData(initial)
+  }, [basePrice])
+
+  // 2. 실시간 Tick 업데이트 (1초마다)
+  useEffect(() => {
+    if (data.length === 0) return
+
+    const interval = setInterval(() => {
+      setData(prev => {
+        const last = prev[prev.length - 1]
+        const next = generateNextTick(last)
+        return [...prev.slice(0, -1), next]
+      })
+    }, 1000)
+
+    return () => clearInterval(interval)
+  }, [data.length])
+
+  // 3. SVG 경로 계산 (선 그래프)
+  const chartPath = useMemo(() => {
+    if (data.length === 0) return ""
+    const max = Math.max(...data.map(d => d.high))
+    const min = Math.min(...data.map(d => d.low))
+    const range = max - min
+    const width = 1000
+    const height = 200
+
+    return data.map((d, i) => {
+      const x = (i / (data.length - 1)) * width
+      const y = height - ((d.close - min) / range) * height
+      return `${i === 0 ? 'M' : 'L'} ${x} ${y}`
+    }).join(' ')
+  }, [data])
+
+  const isPositive = data.length > 0 && data[data.length - 1].close >= data[0].close
 
   return (
-    <div className="bg-white rounded-xl border border-gray-100 p-4 shadow-sm">
-      {/* 기간 탭 */}
-      <div className="flex gap-1 mb-3">
-        {PERIODS.map(({ key, label }) => (
-          <button
-            key={key}
-            onClick={() => setPeriod(key)}
-            className={`px-3 py-1 rounded-full text-xs font-medium transition-colors ${
-              period === key
-                ? 'bg-blue-600 text-white'
-                : 'text-gray-500 hover:bg-gray-100'
-            }`}
-          >
-            {label}
-          </button>
-        ))}
+    <div className="relative w-full bg-white rounded-[32px] p-6 border border-gray-50 shadow-sm overflow-hidden flex flex-col gap-4 animate-toss-in">
+      <div className="flex justify-between items-center mb-2">
+        <h3 className="text-[10px] font-black text-gray-400 uppercase tracking-widest">실시간 시세 훈련</h3>
+        <div className="flex items-center gap-2">
+          <span className="flex h-2 w-2 relative">
+            <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-red-400 opacity-75"></span>
+            <span className="relative inline-flex rounded-full h-2 w-2 bg-red-500"></span>
+          </span>
+          <span className="text-[10px] font-bold text-red-500 uppercase">Live</span>
+        </div>
       </div>
 
-      {/* 차트 영역 — TODO: recharts 또는 lightweight-charts 연동 */}
-      <div className="h-40 flex items-center justify-center bg-gray-50 rounded-lg text-sm text-gray-400">
-        {periodData ? '차트 데이터 있음 (라이브러리 연동 필요)' : '차트 데이터 없음'}
+      {/* 실시간 SVG 선 그래프 */}
+      <div className="relative h-[200px] w-full">
+        <svg 
+          viewBox="0 0 1000 200" 
+          className="w-full h-full overflow-visible"
+          preserveAspectRatio="none"
+        >
+          {/* 가이드 라인 */}
+          <line x1="0" y1="100" x2="1000" y2="100" stroke="#f2f4f6" strokeWidth="1" strokeDasharray="4" />
+          
+          {/* 메인 시세 선 */}
+          <path
+            d={chartPath}
+            fill="none"
+            stroke={isPositive ? "#f04452" : "#3182f6"}
+            strokeWidth="3"
+            strokeLinecap="round"
+            strokeLinejoin="round"
+            className="transition-all duration-1000"
+          />
+          
+          {/* 현재가 포인터 */}
+          {data.length > 0 && (
+            <circle
+              cx="1000"
+              cy={200 - ((data[data.length - 1].close - Math.min(...data.map(d => d.low))) / (Math.max(...data.map(d => d.high)) - Math.min(...data.map(d => d.low)))) * 200}
+              r="5"
+              fill={isPositive ? "#f04452" : "#3182f6"}
+              className="animate-pulse"
+            />
+          )}
+        </svg>
       </div>
+
+      <div className="flex justify-between items-center mt-2">
+        <button 
+          onClick={() => setShowGuide(!showGuide)}
+          className="px-3 py-1.5 bg-gray-50 text-gray-500 text-[10px] font-black rounded-full hover:bg-gray-100 transition-colors"
+        >
+          이 차트 읽는 법
+        </button>
+        <p className="text-[11px] font-black text-gray-900 tabular-nums">
+          현재가: ₩{data[data.length - 1]?.close.toLocaleString(undefined, { maximumFractionDigits: 0 })}
+        </p>
+      </div>
+
+      {/* 가이드 오버레이 */}
+      {showGuide && (
+        <div className="absolute inset-0 bg-blue-600/95 backdrop-blur-sm z-20 p-8 flex flex-col text-white animate-in fade-in">
+          <div className="flex justify-between items-center mb-6">
+            <h4 className="text-xl font-black">차트가 꿈틀대나요?</h4>
+            <button onClick={() => setShowGuide(false)} className="text-2xl">✕</button>
+          </div>
+          <p className="text-sm font-bold leading-relaxed">
+            실제 시장처럼 1초마다 가격이 변하고 있어요.<br /><br />
+            빨간색 선은 시작보다 올랐다는 뜻,<br />
+            파란색 선은 떨어졌다는 뜻이에요.<br /><br />
+            움직이는 끝점을 보며 매수 타이밍을 잡아보세요!
+          </p>
+          <button 
+            onClick={() => setShowGuide(false)}
+            className="mt-auto py-4 bg-white text-blue-600 rounded-2xl text-sm font-black"
+          >
+            알겠어요!
+          </button>
+        </div>
+      )}
     </div>
   )
 }

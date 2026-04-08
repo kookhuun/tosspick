@@ -1,218 +1,149 @@
 'use client'
 
-// @TASK T-TRADING - 실제 종목 목록 탭 (국내/해외, 검색, 섹터 필터)
+import { useState, useMemo, useEffect } from 'react'
+import { useSearchParams } from 'next/navigation'
+import { MOCK_BIG_MOVERS } from '@/lib/data/mock'
+import { getBalance, saveBalance, recordTrade, Position } from '@/lib/trading/virtual-balance'
+import TradeReasonModal from './TradeReasonModal'
 
-import { useState } from 'react'
-import {
-  DOMESTIC_STOCKS,
-  OVERSEAS_STOCKS,
-  getDomesticSectors,
-  getOverseasSectors,
-  type StockItem,
-} from '@/lib/trading/stocks-data'
-import { buyStock, getBalance } from '@/lib/trading/virtual-balance'
-
-interface BuyModalState {
-  stock: StockItem | null
-  quantity: string
+interface StockListTabProps {
+  onBalanceChange: () => void
 }
 
-export default function StockListTab({ onBalanceChange }: { onBalanceChange?: () => void }) {
-  const [tab, setTab] = useState<'domestic' | 'overseas'>('domestic')
-  const [search, setSearch] = useState('')
-  const [sector, setSector] = useState<string | null>(null)
-  const [modal, setModal] = useState<BuyModalState>({ stock: null, quantity: '1' })
-  const [message, setMessage] = useState<string | null>(null)
+export default function StockListTab({ onBalanceChange }: StockListTabProps) {
+  const searchParams = useSearchParams()
+  const initialSymbol = searchParams.get('symbol')
 
-  const stocks = tab === 'domestic' ? DOMESTIC_STOCKS : OVERSEAS_STOCKS
-  const sectors = tab === 'domestic' ? getDomesticSectors() : getOverseasSectors()
+  const [searchTerm, setSearchTerm] = useState('')
+  const [selectedMarket, setSelectedMarket] = useState<'ALL' | 'KOSPI' | 'KOSDAQ' | 'NASDAQ'>('ALL')
+  const [selectedStock, setSelectedStock] = useState<{ symbol: string; name: string; price: number } | null>(null)
 
-  const filtered = stocks.filter((s) => {
-    const matchSearch =
-      search === '' ||
-      s.name.toLowerCase().includes(search.toLowerCase()) ||
-      s.symbol.toLowerCase().includes(search.toLowerCase())
-    const matchSector = sector === null || s.sector === sector
-    return matchSearch && matchSector
-  })
+  // URL 파라미터로 종목이 넘어오면 바로 모달을 띄워줍니다
+  useEffect(() => {
+    if (initialSymbol) {
+      const stock = MOCK_BIG_MOVERS.find(s => s.symbol === initialSymbol)
+      if (stock) {
+        setSelectedStock({ symbol: stock.symbol, name: stock.name, price: stock.current_price })
+      }
+    }
+  }, [initialSymbol])
 
-  function showMessage(msg: string) {
-    setMessage(msg)
-    setTimeout(() => setMessage(null), 2500)
+  const filteredTickers = useMemo(() => {
+    return MOCK_BIG_MOVERS.filter(t => {
+      const matchSearch = t.name.includes(searchTerm) || t.symbol.toLowerCase().includes(searchTerm.toLowerCase())
+      const matchMarket = selectedMarket === 'ALL' || t.market === selectedMarket
+      return matchSearch && matchMarket
+    }).slice(0, 24)
+  }, [searchTerm, selectedMarket])
+
+  const handleBuyClick = (ticker: any) => {
+    setSelectedStock({ symbol: ticker.symbol, name: ticker.name, price: ticker.current_price })
   }
 
-  function handleBuyConfirm() {
-    if (!modal.stock) return
-    const qty = parseInt(modal.quantity, 10)
-    if (!qty || qty <= 0) return showMessage('수량을 입력해주세요.')
-    const ok = buyStock(modal.stock.symbol, modal.stock.name, modal.stock.price, qty)
-    if (ok) {
-      showMessage(`매수 완료: ${modal.stock.name} ${qty}주`)
-      onBalanceChange?.()
-      setModal({ stock: null, quantity: '1' })
-    } else {
-      const balance = getBalance()
-      showMessage(`잔고 부족 (보유 현금: ₩${balance.cash.toLocaleString('ko-KR')})`)
-    }
-  }
+  const handleConfirmBuy = (reason: string, strategy: 'short' | 'long') => {
+    if (!selectedStock) return
 
-  const priceFormat = (stock: StockItem) => {
-    if (stock.market === 'domestic') {
-      return `₩${stock.price.toLocaleString('ko-KR')}`
+    const balance = getBalance()
+    const quantity = 10
+    const totalCost = selectedStock.price * quantity
+
+    if (balance.cash < totalCost) {
+      alert('훈련 자금이 부족합니다!')
+      return
     }
-    return `$${stock.price.toLocaleString('en-US', { minimumFractionDigits: 1, maximumFractionDigits: 2 })}`
+
+    balance.cash -= totalCost
+    balance.total_invested += totalCost
+    saveBalance(balance)
+
+    recordTrade({
+      id: Math.random().toString(36).substr(2, 9),
+      symbol: selectedStock.symbol,
+      name: selectedStock.name,
+      type: 'buy',
+      quantity,
+      price: selectedStock.price,
+      date: new Date().toISOString(),
+      reason,
+      strategy
+    })
+
+    setSelectedStock(null)
+    onBalanceChange()
+    alert(`${selectedStock.name} 10주를 매수했습니다. 훈련을 시작합니다!`)
   }
 
   return (
-    <div className="flex flex-col gap-4">
-      {/* 국내/해외 탭 */}
-      <div className="flex gap-1 bg-gray-100 rounded-xl p-1">
-        {(['domestic', 'overseas'] as const).map((t) => (
-          <button
-            key={t}
-            onClick={() => { setTab(t); setSector(null) }}
-            className={`flex-1 py-2 rounded-lg text-sm font-semibold transition-colors ${
-              tab === t ? 'bg-white text-blue-600 shadow-sm' : 'text-gray-500 hover:text-gray-700'
-            }`}
-          >
-            {t === 'domestic' ? '국내' : '해외'}
-          </button>
-        ))}
-      </div>
-
-      {/* 검색 */}
-      <div className="relative">
-        <input
-          type="search"
-          placeholder="종목명 또는 코드 검색"
-          value={search}
-          onChange={(e) => setSearch(e.target.value)}
-          className="w-full rounded-xl border border-gray-200 bg-gray-50 px-4 py-2.5 text-sm focus:outline-none focus:ring-2 focus:ring-blue-500 focus:bg-white transition-colors"
-          aria-label="종목 검색"
-        />
-      </div>
-
-      {/* 섹터 필터 */}
-      <div className="flex gap-2 overflow-x-auto pb-1 scrollbar-hide">
-        <button
-          onClick={() => setSector(null)}
-          className={`shrink-0 px-3 py-1 rounded-full text-xs font-medium transition-colors ${
-            sector === null ? 'bg-blue-600 text-white' : 'bg-gray-100 text-gray-600 hover:bg-gray-200'
-          }`}
-        >
-          전체
-        </button>
-        {sectors.map((s) => (
-          <button
-            key={s}
-            onClick={() => setSector(sector === s ? null : s)}
-            className={`shrink-0 px-3 py-1 rounded-full text-xs font-medium transition-colors ${
-              sector === s ? 'bg-blue-600 text-white' : 'bg-gray-100 text-gray-600 hover:bg-gray-200'
-            }`}
-          >
-            {s}
-          </button>
-        ))}
-      </div>
-
-      {/* 종목 목록 */}
-      <div className="flex flex-col gap-0 rounded-xl overflow-hidden border border-gray-100">
-        {filtered.length === 0 ? (
-          <div className="py-8 text-center text-sm text-gray-400">검색 결과가 없습니다.</div>
-        ) : (
-          filtered.map((stock, i) => {
-            const isPos = stock.change_rate >= 0
-            return (
-              <div
-                key={stock.symbol}
-                className={`flex items-center justify-between px-4 py-3 bg-white hover:bg-gray-50 transition-colors ${
-                  i !== 0 ? 'border-t border-gray-50' : ''
-                }`}
-              >
-                <div className="flex flex-col min-w-0">
-                  <span className="text-sm font-semibold text-gray-900 truncate">{stock.name}</span>
-                  <span className="text-xs text-gray-400">{stock.symbol} · {stock.sector}</span>
-                </div>
-                <div className="flex items-center gap-3 shrink-0">
-                  <div className="flex flex-col items-end">
-                    <span className="text-sm font-semibold text-gray-900">{priceFormat(stock)}</span>
-                    <span className={`text-xs font-medium ${isPos ? 'text-red-500' : 'text-blue-500'}`}>
-                      {isPos ? '+' : ''}{stock.change_rate.toFixed(2)}%
-                    </span>
-                  </div>
-                  <button
-                    onClick={() => setModal({ stock, quantity: '1' })}
-                    className="px-3 py-1.5 rounded-lg bg-red-50 hover:bg-red-100 text-red-600 text-xs font-semibold transition-colors min-w-[44px] min-h-[36px]"
-                    aria-label={`${stock.name} 매수`}
-                  >
-                    매수
-                  </button>
-                </div>
-              </div>
-            )
-          })
-        )}
-      </div>
-
-      {/* 토스트 메시지 */}
-      {message && (
-        <div className="rounded-lg bg-gray-800 text-white text-sm px-4 py-2.5 font-medium">
-          {message}
+    <div className="flex flex-col gap-6 animate-toss-in">
+      {/* 필터 섹션 */}
+      <div className="flex flex-col md:flex-row gap-4">
+        <div className="relative flex-1">
+          <input 
+            type="text"
+            placeholder="훈련할 종목을 검색하세요 (삼성전자, AAPL...)"
+            value={searchTerm}
+            onChange={(e) => setSearchTerm(e.target.value)}
+            className="w-full bg-white border border-gray-100 rounded-2xl px-5 py-3.5 text-sm outline-none focus:border-blue-500 shadow-sm font-bold"
+          />
         </div>
-      )}
+        <div className="flex gap-2 overflow-x-auto no-scrollbar">
+          {['ALL', 'KOSPI', 'KOSDAQ', 'NASDAQ'].map((m) => (
+            <button
+              key={m}
+              onClick={() => setSelectedMarket(m as any)}
+              className={`px-5 py-2.5 rounded-xl text-xs font-black transition-all whitespace-nowrap ${
+                selectedMarket === m 
+                  ? 'bg-gray-900 text-white shadow-lg' 
+                  : 'bg-white text-gray-400 border border-gray-100 hover:bg-gray-50'
+              }`}
+            >
+              {m === 'ALL' ? '전체' : m}
+            </button>
+          ))}
+        </div>
+      </div>
 
-      {/* 매수 모달 */}
-      {modal.stock && (
-        <div
-          className="fixed inset-0 z-50 flex items-end md:items-center justify-center bg-black/40"
-          role="dialog"
-          aria-modal="true"
-          aria-labelledby="buy-modal-title"
-          onClick={(e) => e.target === e.currentTarget && setModal({ stock: null, quantity: '1' })}
-        >
-          <div className="w-full max-w-md bg-white rounded-t-2xl md:rounded-2xl p-6 shadow-xl">
-            <h2 id="buy-modal-title" className="text-base font-bold text-gray-900 mb-1">
-              {modal.stock.name} 매수
-            </h2>
-            <p className="text-sm text-gray-500 mb-4">
-              현재가: {priceFormat(modal.stock)}
-            </p>
-            <div className="flex flex-col gap-2 mb-4">
-              <label htmlFor="modal-qty" className="text-sm font-medium text-gray-700">
-                수량
-              </label>
-              <input
-                id="modal-qty"
-                type="number"
-                min="1"
-                value={modal.quantity}
-                onChange={(e) => setModal((m) => ({ ...m, quantity: e.target.value }))}
-                className="rounded-xl border border-gray-200 px-4 py-3 text-sm focus:outline-none focus:ring-2 focus:ring-blue-500"
-                autoFocus
-              />
-              {modal.quantity && parseInt(modal.quantity, 10) > 0 && (
-                <p className="text-xs text-gray-400">
-                  총 {priceFormat({ ...modal.stock, price: modal.stock.price * parseInt(modal.quantity || '1', 10) })}
-                </p>
-              )}
+      {/* 종목 그리드 */}
+      <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-4 gap-4">
+        {filteredTickers.map((ticker) => (
+          <div 
+            key={ticker.symbol}
+            className="toss-card toss-pressable p-5 flex flex-col justify-between"
+          >
+            <div>
+              <div className="flex justify-between items-start mb-2">
+                <span className="text-[10px] font-black text-gray-300 uppercase tracking-widest">{ticker.market}</span>
+                <span className={`text-[11px] font-black ${ticker.price_change_rate >= 0 ? 'text-[#f04452]' : 'text-[#3182f6]'}`}>
+                  {ticker.price_change_rate >= 0 ? '+' : ''}{ticker.price_change_rate}%
+                </span>
+              </div>
+              <h4 className="text-sm font-black text-gray-900 mb-1 truncate">{ticker.name}</h4>
+              <p className="text-[11px] font-bold text-gray-400 mb-4 tracking-tight">{ticker.symbol}</p>
             </div>
-            <div className="flex gap-2">
-              <button
-                onClick={() => setModal({ stock: null, quantity: '1' })}
-                className="flex-1 py-3 rounded-xl border border-gray-200 text-sm font-semibold text-gray-600 hover:bg-gray-50 transition-colors"
+            
+            <div className="flex flex-col gap-2.5">
+              <span className="text-sm font-black text-gray-900">
+                ₩{ticker.current_price.toLocaleString()}
+              </span>
+              <button 
+                onClick={() => handleBuyClick(ticker)}
+                className="w-full py-2.5 bg-[#f2f4f6] text-gray-900 text-[11px] font-black rounded-xl hover:bg-blue-600 hover:text-white transition-all shadow-sm"
               >
-                취소
-              </button>
-              <button
-                onClick={handleBuyConfirm}
-                className="flex-1 py-3 rounded-xl bg-red-500 hover:bg-red-600 text-sm font-semibold text-white transition-colors"
-              >
-                매수 확인
+                훈련 매수
               </button>
             </div>
           </div>
-        </div>
-      )}
+        ))}
+      </div>
+
+      {/* 매매 복기 모달 */}
+      <TradeReasonModal 
+        isOpen={!!selectedStock}
+        onClose={() => setSelectedStock(null)}
+        onConfirm={handleConfirmBuy}
+        symbol={selectedStock?.symbol ?? ''}
+        name={selectedStock?.name ?? ''}
+      />
     </div>
   )
 }

@@ -1,18 +1,15 @@
-// @TASK P3-S4-T1
 'use client'
 
-import { useState } from 'react'
+import { useState, useEffect } from 'react'
+import { useRouter } from 'next/navigation'
 
 export interface TickerData {
-  id: string
   symbol: string
   name: string
-  market: string
   current_price: number
   price_change: number
   price_change_rate: number
-  volume: number
-  market_cap: number
+  market: string
 }
 
 interface StockHeaderProps {
@@ -21,55 +18,69 @@ interface StockHeaderProps {
 }
 
 export default function StockHeader({ ticker, isLoggedIn }: StockHeaderProps) {
-  const [watchlisted, setWatchlisted] = useState(false)
-  const isUp = ticker.price_change_rate >= 0
+  const router = useRouter()
+  const [viewers, setViewers] = useState(0)
+  
+  const isPositive = ticker.price_change_rate >= 0
+  const colorClass = isPositive ? 'text-[#f04452]' : 'text-[#3182f6]'
 
-  async function handleWatchlist() {
-    if (!isLoggedIn) {
-      window.location.href = '/auth/login'
-      return
-    }
-    setWatchlisted((prev) => !prev)
-    // TODO P4: watchlist API 연동
-  }
+  useEffect(() => {
+    setViewers(Math.floor(Math.random() * 500) + 120)
+  }, [])
 
   return (
-    <div className="bg-white px-4 pt-5 pb-4 border-b border-gray-100">
-      <div className="flex items-start justify-between">
-        <div>
-          <h1 className="text-lg font-bold text-gray-900">{ticker.name}</h1>
-          <div className="flex items-center gap-2 mt-0.5">
-            <span className="text-xs text-gray-400">{ticker.symbol}</span>
-            <span className="text-[10px] px-1.5 py-0.5 rounded bg-gray-100 text-gray-500 font-medium">
-              {ticker.market}
-            </span>
+    <header className="bg-white px-5 pt-10 pb-6 border-b border-gray-50 animate-toss-in">
+      <div className="flex flex-col gap-6">
+        <div className="flex justify-between items-start">
+          <div className="flex flex-col gap-1">
+            <div className="flex items-center gap-2">
+              <h1 className="text-[24px] font-black text-gray-900 tracking-tight">{ticker.name}</h1>
+              <span className="text-[11px] font-bold text-gray-400 bg-gray-100 px-2 py-0.5 rounded-md">{ticker.symbol}</span>
+            </div>
+            <p className="text-[12px] font-bold text-[#3182f6] flex items-center gap-1.5 mt-1">
+              <span className="relative flex h-2 w-2">
+                <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-blue-400 opacity-75"></span>
+                <span className="relative inline-flex rounded-full h-2 w-2 bg-blue-500"></span>
+              </span>
+              지금 {viewers}명이 함께 보고 있어요
+            </p>
+          </div>
+          <div className="flex gap-2">
+            <button className="w-12 h-12 rounded-2xl bg-gray-50 flex items-center justify-center text-xl toss-pressable">
+              ⭐
+            </button>
           </div>
         </div>
-        <button
-          onClick={handleWatchlist}
-          className={`text-xs px-3 py-1.5 rounded-full border font-medium transition-colors ${
-            watchlisted
-              ? 'bg-blue-600 text-white border-blue-600'
-              : 'bg-white text-blue-600 border-blue-200 hover:bg-blue-50'
-          }`}
-        >
-          {watchlisted ? '관심주 ✓' : '+ 관심주'}
-        </button>
-      </div>
 
-      <div className="mt-3">
-        <span className="text-2xl font-bold text-gray-900">
-          {ticker.current_price.toLocaleString()}원
-        </span>
-        <div className="flex items-center gap-2 mt-1">
-          <span className={`text-sm font-semibold ${isUp ? 'text-green-600' : 'text-red-500'}`}>
-            {isUp ? '+' : ''}{ticker.price_change.toLocaleString()}원
-          </span>
-          <span className={`text-sm font-semibold ${isUp ? 'text-green-600' : 'text-red-500'}`}>
-            ({isUp ? '+' : ''}{ticker.price_change_rate.toFixed(2)}%)
-          </span>
+        <div className="flex flex-col gap-4">
+          <div className="flex flex-col gap-0.5">
+            <span className="text-[32px] font-black text-gray-900 tabular-nums tracking-tighter">
+              ₩{ticker.current_price.toLocaleString()}
+            </span>
+            <span className={`text-[15px] font-bold ${colorClass}`}>
+              {isPositive ? '▲' : '▼'} {Math.abs(ticker.price_change).toLocaleString()} ({isPositive ? '+' : ''}{ticker.price_change_rate}%)
+            </span>
+          </div>
+          
+          {/* 행동 유도 버튼: 훈련소로 바로가기 */}
+          <button 
+            onClick={() => router.push(`/trading?symbol=${ticker.symbol}`)}
+            className="w-full py-4 bg-blue-600 text-white rounded-[20px] text-sm font-black shadow-lg shadow-blue-100 toss-pressable flex items-center justify-center gap-2"
+          >
+            🎯 이 종목으로 투자 훈련하기
+          </button>
+
+          <div className="bg-[#f9fafb] p-5 rounded-[24px] flex items-center gap-4 group">
+            <div className="w-10 h-10 rounded-full bg-white flex items-center justify-center text-lg shadow-sm">
+              🛡️
+            </div>
+            <div className="flex flex-col">
+              <p className="text-[13px] font-black text-gray-800">안전한 훈련 환경</p>
+              <p className="text-[11px] font-bold text-gray-400">실수해도 내 자산은 깎이지 않아요</p>
+            </div>
+          </div>
         </div>
       </div>
-    </div>
+    </header>
   )
 }

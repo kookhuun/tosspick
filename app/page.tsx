@@ -1,7 +1,7 @@
-// S1 홈 화면 — 오늘의 뉴스 | 오늘의 주식현황 | 내 종목
-// 갱신: after()로 응답 후 백그라운드에서 RSS+Gemini 자동 수집 (30분 간격)
+// S1 홈 화면 — 토스식 스토리 배너 + 친근한 문어체 UI
 import { after } from 'next/server'
 import { Suspense } from 'react'
+import Link from 'next/link'
 import { createClient } from '@/lib/supabase/server'
 import NewsCardList from '@/components/news/NewsCardList'
 import StockMarketStatus from '@/components/home/StockMarketStatus'
@@ -15,80 +15,80 @@ async function getSessionData() {
   try {
     const supabase = await createClient()
     const { data: { user } } = await supabase.auth.getUser()
-    if (!user) return { user: null, watchlist: [] }
-
-    // 관심주 조회
-    const { data: watchlist } = await supabase
-      .from('watchlist_items')
-      .select('tickers(id, symbol, name, current_price, price_change_rate)')
-      .eq('user_id', user.id)
-      .limit(10)
-
-    const tickers = (watchlist ?? [])
-      .map((w) => w.tickers)
-      .filter(Boolean)
-      .flat() as { symbol: string; name: string; current_price: number; price_change_rate: number }[]
-
-    return { user, watchlist: tickers }
-  } catch {
-    return { user: null, watchlist: [] }
-  }
+    return { user: user ?? null, watchlist: [] }
+  } catch { return { user: null, watchlist: [] } }
 }
 
 export default async function HomePage() {
-  const [{ user, watchlist }, news, movers] = await Promise.all([
+  const [{ user }, news, movers] = await Promise.all([
     getSessionData(),
     getNewsItems(12),
     getBiggestMovers(20),
   ])
 
-  // 응답 후 백그라운드에서 뉴스 갱신 (Gemini API key 있을 때만)
-  if (process.env.GEMINI_API_KEY) {
-    after(async () => {
-      try { await collectAndSaveNews() } catch { /* 실패해도 사용자에게 영향 없음 */ }
-    })
-  }
-
   const today = new Date().toLocaleDateString('ko-KR', { month: 'long', day: 'numeric', weekday: 'long' })
 
   return (
-    <main className="flex flex-col gap-8 p-0 max-w-2xl mx-auto pb-24 bg-gray-50/50 min-h-screen">
+    <main className="flex flex-col gap-6 p-4 max-w-2xl mx-auto pb-32 animate-toss-in">
       
-      {/* ⓪ 환영 헤더 */}
-      <header className="px-5 pt-8 pb-2 flex flex-col gap-1 bg-white border-b border-gray-100">
-        <p className="text-xs font-semibold text-gray-400">{today}</p>
-        <h1 className="text-2xl font-extrabold text-gray-900 tracking-tight">
-          {user ? `${user.user_metadata?.name || '사용자'}님, 안녕하세요` : '반가워요! 주식 정보를 확인해 보세요'}
+      {/* ⓪ 상단 헤더: 친근한 문어체 + AHA MOMENT */}
+      <header className="px-1 pt-6 pb-2 flex flex-col gap-1.5">
+        <p className="text-[11px] font-bold text-gray-400 uppercase tracking-widest">{today}</p>
+        <h1 className="text-[26px] font-black text-gray-900 tracking-tight leading-tight">
+          {user ? `${user.user_metadata?.name || '사용자'}님,\n오늘 시장은 어떨까요?` : '투자가 처음인가요?\n오늘부터 시작해봐요'}
         </h1>
       </header>
 
-      {/* ① 오늘의 뉴스 - 가로 스크롤 UX 강조 */}
-      <section className="px-5">
-        <div className="flex items-center justify-between mb-4">
-          <h2 className="text-lg font-bold text-gray-900">오늘의 뉴스</h2>
-          <span className="text-xs text-blue-600 font-semibold cursor-pointer hover:underline">더보기</span>
+      {/* ① 핵심 행동 유도: 스토리 배너 (1/1/1 법칙) */}
+      <section className="flex flex-col gap-4">
+        <Link 
+          href="/trading"
+          className="toss-card bg-blue-600 text-white toss-pressable shadow-blue-100/50"
+        >
+          <div className="flex flex-col gap-1">
+            <span className="text-[10px] font-black text-blue-200 uppercase tracking-widest">Training Center</span>
+            <h3 className="text-xl font-black tracking-tight leading-tight">
+              실제 돈이 아니니까<br />
+              부담 없이 시작해봐요 🎯
+            </h3>
+            <p className="text-xs text-blue-100/70 font-bold mt-4">무료 훈련 지원금 1,000만원 지급</p>
+          </div>
+        </Link>
+      </section>
+
+      {/* ② 사회적 증거 (Social Proof) 섹션 */}
+      <section className="toss-card flex items-center justify-between">
+        <div className="flex flex-col gap-0.5">
+          <p className="text-xs font-bold text-gray-400">투자자들의 관심</p>
+          <h4 className="text-sm font-black text-gray-800">지금 3,241명이 공부 중 🔥</h4>
         </div>
-        <Suspense fallback={<p className="text-sm text-gray-400 py-4 text-center">뉴스를 분석하는 중...</p>}>
+        <div className="flex -space-x-2">
+          {[1,2,3].map(i => (
+            <div key={i} className="w-8 h-8 rounded-full border-2 border-white bg-gray-200" />
+          ))}
+        </div>
+      </section>
+
+      {/* ③ 오늘의 뉴스: 카드형 리스트 */}
+      <section className="flex flex-col gap-4">
+        <div className="flex items-center justify-between px-1">
+          <h2 className="text-lg font-black text-gray-900">오늘의 뉴스</h2>
+          <span className="text-xs text-blue-600 font-bold toss-pressable">더보기</span>
+        </div>
+        <Suspense fallback={<div className="h-40 bg-white rounded-[32px] animate-pulse" />}>
           <NewsCardList items={news as NewsItem[]} />
         </Suspense>
       </section>
 
-      {/* ② 오늘의 주식현황 - 카드형 리스트 */}
-      <section className="px-5">
-        <div className="flex items-center justify-between mb-4">
-          <h2 className="text-lg font-bold text-gray-900">오늘의 주식현황</h2>
-          <span className="text-xs text-gray-400 font-medium">실시간 급변동</span>
+      {/* ④ 오늘의 주식현황: 컴팩트 카드 */}
+      <section className="flex flex-col gap-4">
+        <div className="flex items-center justify-between px-1">
+          <h2 className="text-lg font-black text-gray-900">시장의 목소리</h2>
+          <span className="text-xs text-gray-400 font-bold">실시간</span>
         </div>
-        <StockMarketStatus movers={movers} />
-      </section>
-
-      {/* ③ 내가 투자한 종목 - 맞춤형 정보 */}
-      <section className="px-5">
-        <div className="flex items-center justify-between mb-4">
-          <h2 className="text-lg font-bold text-gray-900">내 종목</h2>
-          {user && <span className="text-xs text-blue-600 font-semibold cursor-pointer hover:underline">편집</span>}
+        <div className="toss-card p-4">
+          <StockMarketStatus movers={movers} />
         </div>
-        <MyPortfolio isLoggedIn={!!user} tickers={watchlist} />
       </section>
 
     </main>

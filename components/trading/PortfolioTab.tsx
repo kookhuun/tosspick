@@ -121,7 +121,7 @@ export default function PortfolioTab({ balance, positions, history }: PortfolioT
           <div className="rounded-xl overflow-hidden border border-gray-100">
             {history.slice(0, 10).map((h, i) => {
               const isBuy = h.type === 'buy'
-              const date = new Date(h.timestamp)
+              const date = new Date(h.date)
               const dateStr = `${String(date.getMonth() + 1).padStart(2, '0')}.${String(date.getDate()).padStart(2, '0')} ${String(date.getHours()).padStart(2, '0')}:${String(date.getMinutes()).padStart(2, '0')}`
 
               return (

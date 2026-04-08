@@ -1,19 +1,11 @@
 import type { Metadata } from "next";
-import { Geist } from "next/font/google";
 import "./globals.css";
-import BottomTabBar from "@/components/layout/BottomTabBar";
 import TopNavbar from "@/components/layout/TopNavbar";
-import AppHeader from "@/components/layout/AppHeader";
 import FloatingHelper from "@/components/learn/FloatingHelper";
 
-const geistSans = Geist({
-  variable: "--font-geist-sans",
-  subsets: ["latin"],
-});
-
 export const metadata: Metadata = {
-  title: "투자판 — 초보 투자자를 위한 뉴스 & 시장 분석",
-  description: "복잡한 금융 정보를 한 마디로. AI가 뉴스를 요약하고 인과관계를 설명합니다.",
+  title: "투잡판 - 초보를 위한 투자 훈련소",
+  description: "어려운 투자를 쉽고 재미있게 배우는 투자 훈련 시스템",
 };
 
 export default function RootLayout({
@@ -22,17 +14,17 @@ export default function RootLayout({
   children: React.ReactNode;
 }>) {
   return (
-    <html lang="ko" className={`${geistSans.variable} h-full antialiased`}>
-      <body className="flex min-h-full flex-col bg-gray-50">
-        {/* 데스크톱 상단 네비게이션 */}
+    <html lang="ko">
+      <body className="antialiased bg-[#f2f4f6]">
+        {/* 상단 바가 이제 메인 내비게이션 역할을 합니다 */}
         <TopNavbar />
-        {/* 모바일 상단 헤더 */}
-        <AppHeader />
-        {/* 메인 컨텐츠 */}
-        <main className="flex-1 pb-16 md:pb-0">{children}</main>
-        {/* 모바일 하단 탭바 */}
-        <BottomTabBar />
-        {/* 전역 플로팅 헬퍼 버튼 */}
+        
+        <div className="pt-14">
+          {children}
+        </div>
+
+        {/* 하단 탭 바 제거됨 */}
+        
         <FloatingHelper />
       </body>
     </html>
