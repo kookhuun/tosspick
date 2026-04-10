@@ -76,60 +76,71 @@ export default function StockListTab({ onBalanceChange }: StockListTabProps) {
   return (
     <div className="flex flex-col gap-6 animate-toss-in">
       {/* 필터 섹션 */}
-      <div className="flex flex-col md:flex-row gap-4">
-        <div className="relative flex-1">
-          <input 
-            type="text"
-            placeholder="훈련할 종목을 검색하세요 (삼성전자, AAPL...)"
-            value={searchTerm}
-            onChange={(e) => setSearchTerm(e.target.value)}
-            className="w-full bg-white border border-gray-100 rounded-2xl px-5 py-3.5 text-sm outline-none focus:border-blue-500 shadow-sm font-bold"
-          />
+      <div className="flex flex-col gap-3">
+        <div className="flex flex-col md:flex-row gap-3">
+          <div className="relative flex-1">
+            <input
+              type="text"
+              placeholder="훈련할 종목을 검색하세요 (삼성전자, AAPL...)"
+              value={searchTerm}
+              onChange={(e) => setSearchTerm(e.target.value)}
+              className="w-full bg-white border border-gray-100 rounded-2xl px-5 py-3.5 text-sm outline-none focus:border-blue-500 shadow-sm font-bold"
+            />
+          </div>
+          <div className="flex gap-2 overflow-x-auto no-scrollbar">
+            {(['ALL', 'KOSPI', 'KOSDAQ', 'NASDAQ'] as const).map((m) => (
+              <button
+                key={m}
+                onClick={() => setSelectedMarket(m)}
+                className={`px-5 py-2.5 rounded-xl text-xs font-black transition-all whitespace-nowrap ${
+                  selectedMarket === m
+                    ? 'bg-blue-600 text-white shadow-sm ring-2 ring-blue-300'
+                    : 'bg-white text-gray-500 border border-gray-100 hover:bg-gray-50 hover:text-gray-700'
+                }`}
+              >
+                {m === 'ALL' ? '전체' : m}
+              </button>
+            ))}
+          </div>
         </div>
-        <div className="flex gap-2 overflow-x-auto no-scrollbar">
-          {['ALL', 'KOSPI', 'KOSDAQ', 'NASDAQ'].map((m) => (
-            <button
-              key={m}
-              onClick={() => setSelectedMarket(m as any)}
-              className={`px-5 py-2.5 rounded-xl text-xs font-black transition-all whitespace-nowrap ${
-                selectedMarket === m 
-                  ? 'bg-gray-900 text-white shadow-lg' 
-                  : 'bg-white text-gray-400 border border-gray-100 hover:bg-gray-50'
-              }`}
-            >
-              {m === 'ALL' ? '전체' : m}
-            </button>
-          ))}
-        </div>
+        <p className="text-xs text-gray-500 font-medium">
+          <span className="text-gray-800 font-bold">{filteredTickers.length}개</span> 종목
+          {selectedMarket !== 'ALL' && <span className="ml-1 text-blue-600 font-semibold">· {selectedMarket}</span>}
+          {searchTerm && <span className="ml-1 text-blue-600 font-semibold">· &ldquo;{searchTerm}&rdquo;</span>}
+        </p>
       </div>
 
-      {/* 종목 그리드 */}
-      <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-4 gap-4">
+      {/* 종목 그리드 — 모바일 하단 패딩 88px 확보 */}
+      <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-4 gap-4 pb-24 md:pb-0">
         {filteredTickers.map((ticker) => (
-          <div 
+          <div
             key={ticker.symbol}
-            className="toss-card toss-pressable p-5 flex flex-col justify-between"
+            className="toss-card toss-pressable p-4 flex flex-col gap-3"
           >
-            <div>
-              <div className="flex justify-between items-start mb-2">
-                <span className="text-[10px] font-black text-gray-300 uppercase tracking-widest">{ticker.market}</span>
-                <span className={`text-[11px] font-black ${ticker.price_change_rate >= 0 ? 'text-[#f04452]' : 'text-[#3182f6]'}`}>
-                  {ticker.price_change_rate >= 0 ? '+' : ''}{ticker.price_change_rate}%
-                </span>
+            <div className="flex flex-col gap-1">
+              <div className="flex items-center gap-1.5">
+                <span className="text-[10px] font-black text-gray-400 uppercase tracking-widest">{ticker.market}</span>
+                <span className="text-[10px] text-gray-300">·</span>
+                <span className="text-[10px] font-bold text-gray-400">{ticker.symbol}</span>
               </div>
-              <h4 className="text-sm font-black text-gray-900 mb-1 truncate">{ticker.name}</h4>
-              <p className="text-[11px] font-bold text-gray-400 mb-4 tracking-tight">{ticker.symbol}</p>
+              <h4 className="text-sm font-black text-gray-900 truncate leading-tight">{ticker.name}</h4>
+              <span className={`text-base font-extrabold leading-tight ${ticker.price_change_rate >= 0 ? 'text-[#f04452]' : 'text-[#3182f6]'}`}>
+                {ticker.price_change_rate >= 0 ? '+' : ''}{ticker.price_change_rate}%
+              </span>
             </div>
-            
-            <div className="flex flex-col gap-2.5">
+
+            <div className="flex flex-col gap-2 mt-auto">
               <span className="text-sm font-black text-gray-900">
                 ₩{ticker.current_price.toLocaleString()}
               </span>
-              <button 
+              <button
                 onClick={() => handleBuyClick(ticker)}
-                className="w-full py-2.5 bg-[#f2f4f6] text-gray-900 text-[11px] font-black rounded-xl hover:bg-blue-600 hover:text-white transition-all shadow-sm"
+                className="w-full min-h-[44px] flex items-center justify-center bg-blue-600 text-white text-[11px] font-black rounded-xl
+                           hover:bg-blue-500 active:scale-95 active:bg-blue-800
+                           disabled:bg-gray-200 disabled:text-gray-400 disabled:cursor-not-allowed
+                           transition-all shadow-sm shadow-blue-200"
               >
-                훈련 매수
+                매수 연습
               </button>
             </div>
           </div>

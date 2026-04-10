@@ -44,14 +44,15 @@ export default function TradingPage() {
 
   return (
     <div className="min-h-screen bg-gray-50/50">
-      {/* 페이지 헤더 */}
-      <div className="bg-white border-b border-gray-100 px-4 pt-6 pb-0 md:px-6">
+      {/* 페이지 헤더 — 데스크톱 밀도 개선: pt 축소 */}
+      <div className="bg-white border-b border-gray-100 px-4 pt-3 pb-0 md:pt-4 md:px-6">
         <div className="max-w-6xl mx-auto">
-          <div className="flex items-center justify-between mb-4">
-            <h1 className="text-xl font-extrabold text-gray-900 tracking-tight">투자 훈련 시스템</h1>
-            <div className="flex items-center gap-2 bg-blue-50 border border-blue-100 rounded-full px-4 py-1.5">
-              <span className="text-[10px] font-bold text-blue-400">보유 자산</span>
+          <div className="flex items-center justify-between mb-3">
+            <h1 className="text-lg font-extrabold text-gray-900 tracking-tight">투자 훈련 시스템</h1>
+            <div className="flex items-center gap-1.5 bg-blue-50 border border-blue-200 rounded-full px-3 py-1.5">
+              <span className="text-[10px] font-bold text-blue-600">보유 자산</span>
               <span className="text-sm font-extrabold text-blue-600">{cashDisplay}</span>
+              <span className="text-[10px] font-bold text-emerald-500">오늘 +0.8%</span>
             </div>
           </div>
 
@@ -61,10 +62,10 @@ export default function TradingPage() {
               <button
                 key={tab.id}
                 onClick={() => setActiveTab(tab.id)}
-                className={`px-2 py-3.5 text-sm font-bold border-b-2 transition-all shrink-0 -mb-px ${
+                className={`px-2 py-3.5 text-sm border-b-2 transition-all shrink-0 -mb-px ${
                   activeTab === tab.id
-                    ? 'border-blue-600 text-blue-600'
-                    : 'border-transparent text-gray-400 hover:text-gray-600'
+                    ? 'border-blue-600 text-blue-700 bg-blue-50 rounded-t-md font-extrabold'
+                    : 'border-transparent text-gray-500 font-semibold hover:text-gray-700'
                 }`}
               >
                 {tab.label}
@@ -75,7 +76,7 @@ export default function TradingPage() {
       </div>
 
       {/* 메인 컨텐츠 */}
-      <div className="max-w-6xl mx-auto px-4 py-8 md:px-6">
+      <div className="max-w-6xl mx-auto px-4 pt-4 pb-8 md:py-6 md:px-6">
         {/* 상단 훈련 정보 및 미션 (Step 2에서 만든 컴포넌트) */}
         <TrainingHeader balance={balance} />
 
@@ -95,34 +96,46 @@ export default function TradingPage() {
 
           {/* 오른쪽: 요약 정보 (경험치 기반 배지 등) */}
           <aside className="w-full md:w-80 shrink-0 flex flex-col gap-4">
-            <div className="rounded-3xl border border-gray-100 bg-white p-6 shadow-sm">
-              <h3 className="text-sm font-extrabold text-gray-900 mb-4">획득한 훈련 배지</h3>
-              <div className="flex flex-wrap gap-3">
-                <div className="w-12 h-12 rounded-full bg-blue-50 flex items-center justify-center text-xl grayscale" title="첫 매매">🌱</div>
-                <div className="w-12 h-12 rounded-full bg-blue-50 flex items-center justify-center text-xl grayscale" title="분산 투자 전문가">📚</div>
-                <div className="w-12 h-12 rounded-full bg-blue-50 flex items-center justify-center text-xl grayscale" title="심리 마스터">🧠</div>
-                <div className="w-12 h-12 rounded-full bg-blue-50 flex items-center justify-center text-xl grayscale opacity-30" title="고수">🏅</div>
+            <div className="rounded-2xl border border-gray-100 bg-white p-5 shadow-sm">
+              <h3 className="text-sm font-extrabold text-gray-900 mb-3">배지를 모아요</h3>
+              <div className="flex flex-wrap gap-2">
+                <div className="w-10 h-10 rounded-full bg-blue-50 flex items-center justify-center text-lg grayscale" title="첫 매매">🌱</div>
+                <div className="w-10 h-10 rounded-full bg-blue-50 flex items-center justify-center text-lg grayscale" title="분산 투자 전문가">📚</div>
+                <div className="w-10 h-10 rounded-full bg-blue-50 flex items-center justify-center text-lg grayscale" title="심리 마스터">🧠</div>
+                <div className="w-10 h-10 rounded-full bg-blue-50 flex items-center justify-center text-lg grayscale opacity-30" title="고수">🏅</div>
               </div>
-              <p className="mt-4 text-[10px] text-gray-400 leading-normal">
-                미션을 완료하고 배지를 활성화하세요. 배지는 실전 투자 자신감의 척도가 됩니다.
+              <p className="mt-2.5 text-xs text-gray-500 font-medium leading-[1.4]">
+                다음 획득: <span className="text-gray-700 font-semibold">첫 매매 완료</span> 시 🌱 활성화
               </p>
             </div>
-            
+
             {/* 최근 훈련 결과 */}
-            <div className="rounded-3xl border border-gray-100 bg-white p-6 shadow-sm">
-              <h3 className="text-sm font-extrabold text-gray-900 mb-4">나의 성장 기록</h3>
-              <div className="flex flex-col gap-4">
-                <div className="flex justify-between items-center">
-                  <span className="text-xs text-gray-500 font-medium">총 훈련 횟수</span>
-                  <span className="text-sm font-bold text-gray-900">{history.length}회</span>
+            <div className="rounded-2xl border border-gray-100 bg-white p-5 shadow-sm">
+              <h3 className="text-sm font-extrabold text-gray-900 mb-3">나의 성장 기록</h3>
+              {history.length === 0 ? (
+                <div className="py-4 text-center">
+                  <p className="text-xs text-gray-500 leading-[1.4] mb-3">아직 훈련 기록이 없어요</p>
+                  <button
+                    onClick={() => setActiveTab('stocks')}
+                    className="text-xs font-bold text-blue-600 hover:underline"
+                  >
+                    첫 훈련 시작하기 →
+                  </button>
                 </div>
-                <div className="flex justify-between items-center">
-                  <span className="text-xs text-gray-500 font-medium">기록된 이유</span>
-                  <span className="text-sm font-bold text-gray-900">
-                    {history.filter(h => !!h.reason).length}개
-                  </span>
+              ) : (
+                <div className="flex flex-col gap-4">
+                  <div className="flex justify-between items-center">
+                    <span className="text-xs text-gray-500 font-medium">총 훈련 횟수</span>
+                    <span className="text-sm font-bold text-gray-900">{history.length}회</span>
+                  </div>
+                  <div className="flex justify-between items-center">
+                    <span className="text-xs text-gray-500 font-medium">기록된 이유</span>
+                    <span className="text-sm font-bold text-gray-900">
+                      {history.filter(h => !!h.reason).length}개
+                    </span>
+                  </div>
                 </div>
-              </div>
+              )}
             </div>
           </aside>
         </div>

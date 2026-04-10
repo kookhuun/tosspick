@@ -6,6 +6,9 @@ import { GLOSSARY_DATA } from '@/lib/learn/glossary-data'
 import TermModal from './TermModal'
 import type { GlossaryTerm } from '@/lib/learn/glossary-data'
 
+const FAB_BOTTOM_BASE = 'calc(1rem + env(safe-area-inset-bottom))'
+const FAB_SECONDARY_BOTTOM = 'calc(5.5rem + env(safe-area-inset-bottom))'
+
 const MAX_SCRAPS = 20
 
 interface ScrapItem {
@@ -51,11 +54,19 @@ function FloatingHelperInner() {
     term: GlossaryTerm | null
   } | null>(null)
   const [modalTerm, setModalTerm] = useState<GlossaryTerm | null>(null)
+  const [scrolled, setScrolled] = useState(false)
   const toastTimerRef = useRef<ReturnType<typeof setTimeout> | null>(null)
 
   // 초기 로드
   useEffect(() => {
     setScraps(loadScraps())
+  }, [])
+
+  // 스크롤 감지: 모바일에서 FAB 축소
+  useEffect(() => {
+    function onScroll() { setScrolled(window.scrollY > 40) }
+    window.addEventListener('scroll', onScroll, { passive: true })
+    return () => window.removeEventListener('scroll', onScroll)
   }, [])
 
   const showToast = useCallback((msg: string) => {
@@ -125,12 +136,19 @@ function FloatingHelperInner() {
     setAnalysisResult({ itemId: item.id, term: matched ?? null })
   }
 
+  // 모바일: 스크롤 시 56px→44px / 데스크톱: 고정 56px
+  const fabSizeClass = scrolled
+    ? 'w-11 h-11 md:w-14 md:h-14'
+    : 'w-14 h-14'
+
   const fabClass =
-    'fixed z-40 flex items-center justify-center rounded-full shadow-xl transition-all duration-200 ' +
-    'bottom-20 right-4 w-14 h-14 md:bottom-6 md:right-6 ' +
+    'fixed z-40 flex items-center justify-center rounded-full shadow-xl transition-all duration-300 ' +
+    'right-4 md:right-6 ' +
+    fabSizeClass + ' ' +
     (scrapeMode
       ? 'bg-yellow-400 hover:bg-yellow-500 scale-110'
-      : 'bg-blue-600 hover:bg-blue-700 hover:scale-110')
+      : 'bg-blue-600 hover:bg-blue-700 hover:scale-110') + ' ' +
+    (!scrolled && !panelOpen ? 'opacity-0 pointer-events-none md:opacity-100 md:pointer-events-auto' : 'opacity-100')
 
   return (
     <>
@@ -147,13 +165,14 @@ function FloatingHelperInner() {
         <div
           role="status"
           aria-live="polite"
-          className="fixed bottom-36 left-1/2 z-50 -translate-x-1/2 rounded-full bg-gray-900/90 px-4 py-2 text-xs font-medium text-white shadow-lg md:bottom-20"
+          className="fixed left-1/2 z-50 -translate-x-1/2 rounded-full bg-gray-900/90 px-4 py-2 text-xs font-medium text-white shadow-lg"
+          style={{ bottom: 'calc(9rem + env(safe-area-inset-bottom))' }}
         >
           {toast}
         </div>
       )}
 
-      {/* FAB 버튼 */}
+      {/* FAB 버튼 (메인) */}
       <button
         onClick={() => {
           if (panelOpen) {
@@ -165,22 +184,24 @@ function FloatingHelperInner() {
         }}
         aria-label="스크랩 패널 열기"
         className={fabClass}
+        style={{ bottom: FAB_BOTTOM_BASE }}
       >
-        <span className="text-xl" aria-hidden="true">
+        <span className={scrolled ? 'text-base md:text-xl' : 'text-xl'} aria-hidden="true">
           {scrapeMode ? '✋' : '📖'}
         </span>
       </button>
 
-      {/* 스크랩 버튼 (패널 닫혀 있을 때만) */}
+      {/* 보조 스크랩 버튼 — 모바일 기본 숨김, md 이상에서만 노출 */}
       {!panelOpen && (
         <button
           onClick={toggleScrapeMode}
           aria-label={scrapeMode ? '스크랩 모드 취소' : '텍스트 스크랩'}
           className={
-            'fixed z-40 flex items-center justify-center rounded-full shadow-lg transition-all duration-200 ' +
-            'bottom-36 right-4 w-10 h-10 md:bottom-22 md:right-6 ' +
+            'hidden md:flex fixed z-40 items-center justify-center rounded-full shadow-lg transition-all duration-200 ' +
+            'right-6 w-10 h-10 ' +
             (scrapeMode ? 'bg-yellow-400 text-white' : 'bg-white border border-gray-200 text-gray-600 hover:bg-gray-50')
           }
+          style={{ bottom: FAB_SECONDARY_BOTTOM }}
         >
           <span className="text-sm" aria-hidden="true">
             {scrapeMode ? '✕' : '✂️'}
